@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,7 +20,7 @@ public class PartitionPanel extends StepPanel {
 
     @Override
     public void onNextStep() {
-        ScanPanel scanPanel = new ScanPanel(selectedStorageWidget.assignedLetter);
+        ScanPanel scanPanel = new ScanPanel();
         Frame.setStepPanel(scanPanel);
 
         BottomPanel.setNextButtonEnabled(false);
@@ -138,9 +139,53 @@ public class PartitionPanel extends StepPanel {
         springLayout.putConstraint(SpringLayout.NORTH, unallocatedSize, 3, SpringLayout.SOUTH, storageSize);
         springLayout.putConstraint(SpringLayout.WEST, unallocatedSize, 3, SpringLayout.WEST, partitionInformation);
 
+        if(fs.type().equals("NTFS")) {
+            displayNtfsInformation(springLayout, unallocatedSize);
+        }
 
         partitionInformation.repaint();
         partitionInformation.revalidate();
+    }
+
+    private void displayNtfsInformation(SpringLayout springLayout, Component northernConstraint) {
+        byte[] bootSector = selectedStorageWidget.readBootSector();
+        int bytesPerSector = ((bootSector[0x0C] & 0xff) << 8) | (bootSector[0x0B] & 0xff);
+        int bytesPerCluster = bootSector[0x0D] * bytesPerSector;
+
+        byte[] totalSectorsField = new byte[8];
+        System.arraycopy(bootSector, 0x28, totalSectorsField, 0, 8);
+        long totalSectors = Utility.byteArrayToLong(totalSectorsField, true);
+
+        JSeparator ntfsSeparator = new JSeparator();
+        JLabel ntfsInformation = new JLabel("NTFS Information");
+        ntfsInformation.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        ntfsInformation.setForeground(ntfsSeparator.getForeground());
+        partitionInformation.add(ntfsInformation);
+        partitionInformation.add(ntfsSeparator);
+
+        springLayout.putConstraint(SpringLayout.NORTH, ntfsInformation, 3, SpringLayout.SOUTH, northernConstraint);
+        springLayout.putConstraint(SpringLayout.WEST, ntfsInformation, 3, SpringLayout.WEST, partitionInformation);
+        springLayout.putConstraint(SpringLayout.VERTICAL_CENTER, ntfsSeparator, 2, SpringLayout.VERTICAL_CENTER, ntfsInformation);
+        springLayout.putConstraint(SpringLayout.WEST, ntfsSeparator, 3, SpringLayout.EAST, ntfsInformation);
+        springLayout.putConstraint(SpringLayout.EAST, ntfsSeparator, -3, SpringLayout.EAST, partitionInformation);
+
+        JLabel bytesPerSectorLabel = new JLabel("Bytes per Sector: " + bytesPerSector);
+        partitionInformation.add(bytesPerSectorLabel);
+
+        JLabel bytesPerClusterLabel = new JLabel("Bytes per Cluster: " + bytesPerCluster);
+        partitionInformation.add(bytesPerClusterLabel);
+
+        JLabel totalSectorsLabel = new JLabel("Total Sectors: " + totalSectors);
+        partitionInformation.add(totalSectorsLabel);
+
+        springLayout.putConstraint(SpringLayout.NORTH, bytesPerSectorLabel, 2, SpringLayout.SOUTH, ntfsInformation);
+        springLayout.putConstraint(SpringLayout.WEST, bytesPerSectorLabel, 3, SpringLayout.WEST, partitionInformation);
+
+        springLayout.putConstraint(SpringLayout.NORTH, bytesPerClusterLabel, 3, SpringLayout.SOUTH, bytesPerSectorLabel);
+        springLayout.putConstraint(SpringLayout.WEST, bytesPerClusterLabel, 3, SpringLayout.WEST, partitionInformation);
+
+        springLayout.putConstraint(SpringLayout.NORTH, totalSectorsLabel, 3, SpringLayout.SOUTH, bytesPerClusterLabel);
+        springLayout.putConstraint(SpringLayout.WEST, totalSectorsLabel, 3, SpringLayout.WEST, partitionInformation);
     }
 
     private void setActiveStorageWidget(StorageWidget storageWidget) {
@@ -191,6 +236,20 @@ public class PartitionPanel extends StepPanel {
 
         public String getAssignedLetter() {
             return assignedLetter;
+        }
+
+        public byte[] readBootSector(){
+            File diskRoot = new File ("\\\\.\\" + assignedLetter +":");
+            RandomAccessFile diskAccess;
+            try {
+                diskAccess = new RandomAccessFile(diskRoot, "r");
+                byte[] content = new byte[512]; //todo check for case where the sector size is not 512.
+                diskAccess.readFully(content);
+                diskAccess.close();
+                return content;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
