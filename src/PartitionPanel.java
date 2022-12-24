@@ -6,7 +6,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -67,7 +66,7 @@ public class PartitionPanel extends StepPanel {
         add(partitionInformation);
 
         springLayout.putConstraint(SpringLayout.NORTH, partitionInformation, 0, SpringLayout.NORTH, partitionScrollPane);
-        springLayout.putConstraint(SpringLayout.SOUTH, partitionInformation, 50, SpringLayout.SOUTH, partitionScrollPane);
+        springLayout.putConstraint(SpringLayout.SOUTH, partitionInformation, 180, SpringLayout.NORTH, partitionInformation);
         springLayout.putConstraint(SpringLayout.WEST, partitionInformation, 10, SpringLayout.EAST, partitionScrollPane);
         springLayout.putConstraint(SpringLayout.EAST, partitionInformation, -10, SpringLayout.EAST, this);
     }
@@ -148,7 +147,7 @@ public class PartitionPanel extends StepPanel {
     }
 
     private void displayNtfsInformation(SpringLayout springLayout, Component northernConstraint) {
-        byte[] bootSector = selectedStorageWidget.readBootSector();
+        byte[] bootSector = Utility.readBootSector(selectedStorageWidget.getRoot());
         int bytesPerSector = ((bootSector[0x0C] & 0xff) << 8) | (bootSector[0x0B] & 0xff);
         int bytesPerCluster = bootSector[0x0D] * bytesPerSector;
 
@@ -234,22 +233,8 @@ public class PartitionPanel extends StepPanel {
             return fileStore;
         }
 
-        public String getAssignedLetter() {
-            return assignedLetter;
-        }
-
-        public byte[] readBootSector(){
-            File diskRoot = new File ("\\\\.\\" + assignedLetter +":");
-            RandomAccessFile diskAccess;
-            try {
-                diskAccess = new RandomAccessFile(diskRoot, "r");
-                byte[] content = new byte[512]; //todo check for case where the sector size is not 512.
-                diskAccess.readFully(content);
-                diskAccess.close();
-                return content;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        public File getRoot() {
+            return new File ("\\\\.\\" + assignedLetter +":");
         }
 
         @Override

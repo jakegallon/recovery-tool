@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.math.BigInteger;
 
 public class Utility {
@@ -11,5 +14,18 @@ public class Utility {
             }
         }
         return new BigInteger(bytes).longValueExact();
+    }
+
+    public static byte[] readBootSector(File root) {
+        RandomAccessFile diskAccess;
+        try {
+            diskAccess = new RandomAccessFile(root, "r");
+            byte[] content = new byte[512]; //todo check for case where the sector size is not 512.
+            diskAccess.readFully(content);
+            diskAccess.close();
+            return content;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
