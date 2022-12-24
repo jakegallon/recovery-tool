@@ -15,6 +15,8 @@ public class Frame extends JFrame {
 
     public Frame() {
         init();
+
+        setStepPanel(new PartitionPanel());
     }
 
     public static void setStepPanel(StepPanel stepPanel) {
