@@ -147,37 +147,31 @@ public class PartitionPanel extends StepPanel {
     }
 
     private void displayNtfsInformation(SpringLayout springLayout, Component northernConstraint) {
-        byte[] bootSector = Utility.readBootSector(selectedStorageWidget.getRoot());
-        int bytesPerSector = ((bootSector[0x0C] & 0xff) << 8) | (bootSector[0x0B] & 0xff);
-        int bytesPerCluster = bootSector[0x0D] * bytesPerSector;
-
-        byte[] totalSectorsField = new byte[8];
-        System.arraycopy(bootSector, 0x28, totalSectorsField, 0, 8);
-        long totalSectors = Utility.byteArrayToLong(totalSectorsField, true);
+        NTFSInformation ntfsInformation = new NTFSInformation(selectedStorageWidget.getRoot());
 
         JSeparator ntfsSeparator = new JSeparator();
-        JLabel ntfsInformation = new JLabel("NTFS Information");
-        ntfsInformation.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-        ntfsInformation.setForeground(ntfsSeparator.getForeground());
-        partitionInformation.add(ntfsInformation);
+        JLabel ntfsInformationLabel = new JLabel("NTFS Information");
+        ntfsInformationLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        ntfsInformationLabel.setForeground(ntfsSeparator.getForeground());
+        partitionInformation.add(ntfsInformationLabel);
         partitionInformation.add(ntfsSeparator);
 
-        springLayout.putConstraint(SpringLayout.NORTH, ntfsInformation, 3, SpringLayout.SOUTH, northernConstraint);
-        springLayout.putConstraint(SpringLayout.WEST, ntfsInformation, 3, SpringLayout.WEST, partitionInformation);
-        springLayout.putConstraint(SpringLayout.VERTICAL_CENTER, ntfsSeparator, 2, SpringLayout.VERTICAL_CENTER, ntfsInformation);
-        springLayout.putConstraint(SpringLayout.WEST, ntfsSeparator, 3, SpringLayout.EAST, ntfsInformation);
+        springLayout.putConstraint(SpringLayout.NORTH, ntfsInformationLabel, 3, SpringLayout.SOUTH, northernConstraint);
+        springLayout.putConstraint(SpringLayout.WEST, ntfsInformationLabel, 3, SpringLayout.WEST, partitionInformation);
+        springLayout.putConstraint(SpringLayout.VERTICAL_CENTER, ntfsSeparator, 2, SpringLayout.VERTICAL_CENTER, ntfsInformationLabel);
+        springLayout.putConstraint(SpringLayout.WEST, ntfsSeparator, 3, SpringLayout.EAST, ntfsInformationLabel);
         springLayout.putConstraint(SpringLayout.EAST, ntfsSeparator, -3, SpringLayout.EAST, partitionInformation);
 
-        JLabel bytesPerSectorLabel = new JLabel("Bytes per Sector: " + bytesPerSector);
+        JLabel bytesPerSectorLabel = new JLabel("Bytes per Sector: " + ntfsInformation.getBytesPerSector());
         partitionInformation.add(bytesPerSectorLabel);
 
-        JLabel bytesPerClusterLabel = new JLabel("Bytes per Cluster: " + bytesPerCluster);
+        JLabel bytesPerClusterLabel = new JLabel("Bytes per Cluster: " + ntfsInformation.getBytesPerCluster());
         partitionInformation.add(bytesPerClusterLabel);
 
-        JLabel totalSectorsLabel = new JLabel("Total Sectors: " + totalSectors);
+        JLabel totalSectorsLabel = new JLabel("Total Sectors: " + ntfsInformation.getTotalSectors());
         partitionInformation.add(totalSectorsLabel);
 
-        springLayout.putConstraint(SpringLayout.NORTH, bytesPerSectorLabel, 2, SpringLayout.SOUTH, ntfsInformation);
+        springLayout.putConstraint(SpringLayout.NORTH, bytesPerSectorLabel, 2, SpringLayout.SOUTH, ntfsInformationLabel);
         springLayout.putConstraint(SpringLayout.WEST, bytesPerSectorLabel, 3, SpringLayout.WEST, partitionInformation);
 
         springLayout.putConstraint(SpringLayout.NORTH, bytesPerClusterLabel, 3, SpringLayout.SOUTH, bytesPerSectorLabel);
