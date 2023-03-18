@@ -1,6 +1,5 @@
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 
 public class MFTRecord {
 
@@ -10,32 +9,8 @@ public class MFTRecord {
         return isDeleted;
     }
 
-    private enum ATTRIBUTE {
-        STANDARD_INFORMATION(0x10),
-        ATTRIBUTE_LIST(0x20),
-        FILE_NAME(0x30),
-        OBJECT_ID(0x40),
-        SECURITY_DESCRIPTOR(0x50),
-        VOLUME_NAME(0x60),
-        VOLUME_INFORMATION(0x70),
-        DATA(0x80),
-        INDEX_ROOT(0x90),
-        INDEX_ALLOCATION(0xA0),
-        BITMAP(0xB0),
-        REPARSE_POINT(0xC0),
-        EA_INFORMATION(0xD0),
-        EA(0xE0),
-        logged_utility_stream(0x100);
-
-        private final int value;
-
-        ATTRIBUTE(int hex) {
-            value = hex;
-        }
-    }
-
     private final byte[] bytes;
-    private final HashMap<ATTRIBUTE, Integer> attributeOffsets = new HashMap<>();
+    private final HashMap<Attribute, Integer> attributeOffsets = new HashMap<>();
 
     private boolean isDeleted = false;
 
@@ -54,30 +29,30 @@ public class MFTRecord {
 
         while (offset < recordSize){
             long attributeID = Utility.byteArrayToLong(Arrays.copyOfRange(bytes, offset, offset+3), true);
-            ATTRIBUTE attribute = getAttributeByID(attributeID);
+            Attribute attribute = getAttributeByID(attributeID);
             if(attribute == null) {
                 break;
             }
             attributeOffsets.put(attribute, offset);
-            if(attribute == ATTRIBUTE.EA) {
+            if(attribute == Attribute.EA) {
                 offset += (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true) & 0xff);
             }
             offset += (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true) & 0xffff);
         }
     }
 
-    private ATTRIBUTE getAttributeByID(Long id) {
-        for(ATTRIBUTE attribute : ATTRIBUTE.values()) {
+    private Attribute getAttributeByID(Long id) {
+        for(Attribute attribute : Attribute.values()) {
             if(attribute.value == id) return attribute;
         }
         return null;
     }
 
     public String getFileName() {
-        if(!attributeOffsets.containsKey(ATTRIBUTE.FILE_NAME)){
+        if(!attributeOffsets.containsKey(Attribute.FILE_NAME)){
             return "";
         }
-        int offset = attributeOffsets.get(ATTRIBUTE.FILE_NAME);
+        int offset = attributeOffsets.get(Attribute.FILE_NAME);
         int attributeSize = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset + 0x10, offset + 0x13), true);
         int attributeOffset = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset + 0x14, offset + 0x15), true);
         attributeOffset += offset;
@@ -93,7 +68,7 @@ public class MFTRecord {
     }
 
     public long getFileLengthBytes(int bytesPerCluster) {
-        int offset = attributeOffsets.get(ATTRIBUTE.DATA);
+        int offset = attributeOffsets.get(Attribute.DATA);
         long startingVCN = Utility.byteArrayToLong(Arrays.copyOfRange(bytes, offset+0x11, offset+0x17), true);
         long endingVCN = Utility.byteArrayToLong(Arrays.copyOfRange(bytes, offset+0x18, offset+0x1F), true);
         long fileLengthClusters = endingVCN - startingVCN;
