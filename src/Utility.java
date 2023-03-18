@@ -1,7 +1,8 @@
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.Arrays;
 
 public class Utility {
 
@@ -38,5 +39,19 @@ public class Utility {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static byte[] readMFTRecord(FileChannel diskChannel, long offset) throws IOException {
+        NTFSInformation ntfsInformation = NTFSInformation.getInstance();
+        byte[] mftRecord = new byte[ntfsInformation.getMFTRecordLength()];
+        ByteBuffer buffer = ByteBuffer.wrap(mftRecord);
+
+        diskChannel.position(offset);
+        diskChannel.read(buffer);
+
+        if(!Arrays.equals(Arrays.copyOf(mftRecord, 4), new byte[]{0x46, 0x49, 0x4C, 0x45})) {
+            return null;
+        }
+        return mftRecord;
     }
 }
