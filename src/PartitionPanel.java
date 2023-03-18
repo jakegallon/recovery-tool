@@ -147,7 +147,7 @@ public class PartitionPanel extends StepPanel {
     }
 
     private void displayNtfsInformation(SpringLayout springLayout, Component northernConstraint) {
-        NTFSInformation ntfsInformation = new NTFSInformation(selectedStorageWidget.getRoot());
+        NTFSInformation ntfsInformation = NTFSInformation.createInstance(selectedStorageWidget.getRoot());
 
         JSeparator ntfsSeparator = new JSeparator();
         JLabel ntfsInformationLabel = new JLabel("NTFS Information");
