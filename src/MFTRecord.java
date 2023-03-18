@@ -5,6 +5,8 @@ public class MFTRecord {
 
     private static final byte[] checksum = new byte[]{0x46, 0x49, 0x4C, 0x45};
 
+    private boolean isDeleted = false;
+
     public boolean isDeleted() {
         return isDeleted;
     }
@@ -12,7 +14,10 @@ public class MFTRecord {
     private final byte[] bytes;
     private final HashMap<Attribute, Integer> attributeOffsets = new HashMap<>();
 
-    private boolean isDeleted = false;
+    private boolean isDataResident = true;
+    public boolean isDataResident() {
+        return isDataResident;
+    }
 
     public MFTRecord(byte[] bytes) {
         if(!Arrays.equals(Arrays.copyOf(bytes, 4), checksum)) {
@@ -38,6 +43,10 @@ public class MFTRecord {
                 offset += (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true) & 0xff);
             }
             offset += (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true) & 0xffff);
+        }
+
+        if(attributeOffsets.containsKey(Attribute.DATA)){
+            isDataResident = (bytes[attributeOffsets.get(Attribute.DATA) + 0x08] & 0xFF) != 1;
         }
     }
 
