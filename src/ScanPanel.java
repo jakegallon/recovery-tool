@@ -1,5 +1,8 @@
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ScanPanel extends StepPanel {
 
@@ -27,24 +30,52 @@ public class ScanPanel extends StepPanel {
 
     private void printAllFileNames() throws IOException {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
-        long mftSizeBytes = ntfsInformation.getMFTSizeBytes();
         int mftRecordLength = ntfsInformation.getMFTRecordLength();
-        long mftRecordsInMFT = mftSizeBytes/mftRecordLength;
 
         RandomAccessFile diskAccess = new RandomAccessFile(ntfsInformation.getRoot(), "r");
         FileChannel diskChannel = diskAccess.getChannel();
 
-        long offset = ntfsInformation.getMFTByteLocation();
-        for(int i = 0; i < mftRecordsInMFT; i++) {
-            byte[] mftRecordBytes = Utility.readMFTRecord(diskChannel, offset);
-            if (mftRecordBytes != null) {
-                MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
-                if(mftRecord.isDeleted()){
-                    System.out.println(mftRecord.getFileName());
-                }
-            }
-            offset += mftRecordLength;
+        MFTRecord mft = new MFTRecord(Utility.readMFTRecord(diskChannel, ntfsInformation.getMFTByteLocation()));
+        if(mft.isDataResident()) {
+            throw new RuntimeException("$MFT has resident data attribute");
         }
+
+        HashMap<Long, Long> dataRunOffsetFiles = new HashMap<>();
+
+        byte[] dataAttribute = mft.getAttribute(Attribute.DATA);
+        int dataAttributeDataRunsOffset = dataAttribute[0x20];
+        byte[] dataRunBytes = Arrays.copyOfRange(dataAttribute, dataAttributeDataRunsOffset, dataAttribute.length);
+        int dataRunOffset = 0;
+        while(dataRunOffset < dataRunBytes.length) {
+            if (dataRunBytes[dataRunOffset] == 0x00) break;
+
+            int judgementByte = dataRunBytes[dataRunOffset] & 0xFF;
+            int startLength = judgementByte / 16;
+            int lengthLength = judgementByte % 16;
+
+            long lengthClusters = Utility.byteArrayToLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1, dataRunOffset+1+lengthLength), true) & 0xFFFFFFFFL;
+            long lengthFiles = lengthClusters * 4;
+            long startClusters = Utility.byteArrayToLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1+lengthLength, dataRunOffset+1+lengthLength+startLength), true) & 0xFFFFFFFFL;
+            long startBytes = startClusters*4096;
+
+            dataRunOffsetFiles.put(startBytes, lengthFiles);
+            dataRunOffset += startLength + lengthLength + 1;
+        }
+
+        for(Map.Entry<Long, Long> dataRun : dataRunOffsetFiles.entrySet()) {
+            long offsetBytes = dataRun.getKey();
+            for(int i = 0; i < dataRun.getValue(); i++) {
+                byte[] mftRecordBytes = Utility.readMFTRecord(diskChannel, offsetBytes);
+                if (mftRecordBytes != null) {
+                    MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
+                    if(mftRecord.isDeleted()){
+                        System.out.println(mftRecord.getFileName());
+                    }
+                }
+                offsetBytes += mftRecordLength;
+            }
+        }
+
         diskAccess.close();
     }
 }
