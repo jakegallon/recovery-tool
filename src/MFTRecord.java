@@ -50,6 +50,15 @@ public class MFTRecord {
         }
     }
 
+    public byte[] getAttribute(Attribute attribute) {
+        if(!attributeOffsets.containsKey(attribute)) throw new RuntimeException("An MFTRecord received request for attribute '" + attribute + "', which does not exist in that MFTRecord.");
+        int startPos = attributeOffsets.get(attribute);
+        int endPos;
+        if(attribute == Attribute.EA) endPos = startPos + (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x5), true) & 0xff);
+        else endPos = startPos + (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x7) , true) & 0xffff);
+        return(Arrays.copyOfRange(bytes, startPos, endPos));
+    }
+
     private Attribute getAttributeByID(Long id) {
         for(Attribute attribute : Attribute.values()) {
             if(attribute.value == id) return attribute;
