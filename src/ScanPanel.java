@@ -119,9 +119,9 @@ public class ScanPanel extends StepPanel {
             int startLength = judgementByte / 16;
             int lengthLength = judgementByte % 16;
 
-            long lengthClusters = Utility.byteArrayToLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1, dataRunOffset+1+lengthLength), true) & 0xFFFFFFFFL;
+            long lengthClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1, dataRunOffset+1+lengthLength), true);
             long lengthFiles = lengthClusters * 4;
-            long startClusters = Utility.byteArrayToLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1+lengthLength, dataRunOffset+1+lengthLength+startLength), true) & 0xFFFFFFFFL;
+            long startClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1+lengthLength, dataRunOffset+1+lengthLength+startLength), true);
             long startBytes = startClusters*4096;
 
             dataRunOffsetFiles.put(startBytes, lengthFiles);

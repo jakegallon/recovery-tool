@@ -48,12 +48,12 @@ public class NTFSInformation {
 
         byte[] totalSectorsField = new byte[8];
         System.arraycopy(bootSector, 0x28, totalSectorsField, 0, 8);
-        totalSectors = Utility.byteArrayToLong(totalSectorsField, true);
+        totalSectors = Utility.byteArrayToUnsignedLong(totalSectorsField, true);
 
         byte[] MFTClusterLocationField = new byte[8];
         System.arraycopy(bootSector, 0x30, MFTClusterLocationField, 0, 8);
 
-        MFTClusterLocation = Utility.byteArrayToLong(MFTClusterLocationField, true);
+        MFTClusterLocation = Utility.byteArrayToUnsignedLong(MFTClusterLocationField, true);
 
         if(bootSector[0x40] >= 0) MFTRecordLength = (bootSector[0x40] & 0xFF) * bytesPerCluster;
         else MFTRecordLength = (int) Math.pow(2.0, Math.abs(bootSector[0x40]));

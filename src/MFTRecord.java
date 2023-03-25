@@ -33,7 +33,7 @@ public class MFTRecord {
         int recordSize = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, 0x18, 0x1B), true) - 8;
 
         while (offset < recordSize){
-            long attributeID = Utility.byteArrayToLong(Arrays.copyOfRange(bytes, offset, offset+3), true);
+            long attributeID = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset, offset+3), true);
             Attribute attribute = getAttributeByID(attributeID);
             if(attribute == null) {
                 break;
@@ -87,8 +87,8 @@ public class MFTRecord {
 
     public long getFileLengthBytes(int bytesPerCluster) {
         int offset = attributeOffsets.get(Attribute.DATA);
-        long startingVCN = Utility.byteArrayToLong(Arrays.copyOfRange(bytes, offset+0x11, offset+0x17), true);
-        long endingVCN = Utility.byteArrayToLong(Arrays.copyOfRange(bytes, offset+0x18, offset+0x1F), true);
+        long startingVCN = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset+0x11, offset+0x17), true);
+        long endingVCN = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset+0x18, offset+0x1F), true);
         long fileLengthClusters = endingVCN - startingVCN;
         return fileLengthClusters * bytesPerCluster + bytesPerCluster;
     }
@@ -127,7 +127,7 @@ public class MFTRecord {
         if(isDataResident) {
             fileSizeBytes = Utility.byteArrayToInt(Arrays.copyOfRange(dataAttribute, 0x10, 0x14), true);
         } else {
-            fileSizeBytes = Utility.byteArrayToLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true);
+            fileSizeBytes = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true);
         }
     }
 }
