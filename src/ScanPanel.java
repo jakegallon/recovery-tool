@@ -1,9 +1,10 @@
 import javax.swing.*;
+import javax.swing.Timer;
 import java.io.*;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ScanPanel extends StepPanel {
 
@@ -24,6 +25,19 @@ public class ScanPanel extends StepPanel {
         BottomPanel.setBackButtonEnabled(false);
     }
 
+    private final Timer scanTimer;
+    private final JLabel progressLabel;
+    private final JLabel progressPercentLabel;
+    private final JLabel foundFilesLabel;
+
+    private static final ArrayList<MFTRecord> deletedRecords = new ArrayList<>();
+    public static ArrayList<MFTRecord> getDeletedRecords() {
+        return deletedRecords;
+    }
+
+    private static final SpringLayout springLayout = new SpringLayout();
+
+
     private void readDrive() {
         try {
             printAllFileNames();
@@ -31,13 +45,6 @@ public class ScanPanel extends StepPanel {
             throw new RuntimeException(e);
         }
     }
-
-    private final Timer updateTimer;
-    private final JLabel progressLabel;
-    private final JLabel progressPercentLabel;
-    private final JLabel foundFilesLabel;
-
-    private final SpringLayout springLayout = new SpringLayout();
 
     public ScanPanel() {
         readProgressBar = new JProgressBar(0, 0);
@@ -70,8 +77,8 @@ public class ScanPanel extends StepPanel {
         springLayout.putConstraint(SpringLayout.NORTH, foundFilesLabel, 10, SpringLayout.SOUTH, readProgressBar);
         springLayout.putConstraint(SpringLayout.WEST, foundFilesLabel, 0, SpringLayout.WEST, scanningDriveLabel);
 
-        updateTimer = new Timer(200, e -> updateScanInterface());
-        updateTimer.start();
+        scanTimer = new Timer(200, e -> updateScanInterface());
+        scanTimer.start();
     }
 
     private void updateScanInterface() {
@@ -85,11 +92,6 @@ public class ScanPanel extends StepPanel {
         progressPercentLabel.setText(percentInt + "%");
 
         foundFilesLabel.setText(deletedFilesFound + " deleted files found.");
-    }
-
-    private void onScanEnd() {
-        updateTimer.stop();
-        updateScanInterface();
     }
 
     private void printAllFileNames() throws IOException {
@@ -144,7 +146,7 @@ public class ScanPanel extends StepPanel {
                     MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
                     if(mftRecord.isDeleted()){
                         deletedFilesFound++;
-                        System.out.println(mftRecord.getFileName());
+                        addRecordToUpdateQueue(mftRecord);
                     }
                 }
                 offsetBytes += mftRecordLength;
@@ -153,5 +155,37 @@ public class ScanPanel extends StepPanel {
         }
         diskAccess.close();
         onScanEnd();
+    }
+
+    private void onScanEnd() {
+        scanTimer.stop();
+        updateScanInterface();
+        BottomPanel.setNextButtonEnabled(true);
+    }
+
+    private final List<MFTRecord> updateQueue = new ArrayList<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile boolean isProcessing = false;
+
+    public synchronized void addRecordToUpdateQueue(MFTRecord mftRecord) {
+        updateQueue.add(mftRecord);
+        if (!isProcessing) {
+            isProcessing = true;
+            startProcessingThread();
+        }
+    }
+
+    private void startProcessingThread() {
+        executor.submit(() -> {
+            while (!updateQueue.isEmpty()) {
+                process(updateQueue.get(0));
+                updateQueue.remove(0);
+            }
+            isProcessing = false;
+        });
+    }
+
+    private void process(MFTRecord mftRecord) {
+        mftRecord.processAdditionalInformation();
     }
 }
