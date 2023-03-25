@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 public class Utility {
 
-    public static int byteArrayToInt(byte[] bytes, boolean isReversed) {
+    public static int byteArrayToUnsignedInt(byte[] bytes, boolean isReversed) {
         if(isReversed) {
             for(int i = 0; i < bytes.length / 2; i++) {
                 byte b = bytes[i];
@@ -14,7 +14,7 @@ public class Utility {
                 bytes[bytes.length - i - 1] = b;
             }
         }
-        return new BigInteger(bytes).intValueExact();
+        return new BigInteger(1, bytes).intValueExact();
     }
 
     public static long byteArrayToUnsignedLong(byte[] bytes, boolean isReversed) {
@@ -25,8 +25,7 @@ public class Utility {
                 bytes[bytes.length - i - 1] = b;
             }
         }
-        BigInteger bigInt = new BigInteger(1, bytes);
-        return bigInt.longValue();
+        return new BigInteger(1, bytes).longValue();
     }
 
     public static byte[] readBootSector(File root) {

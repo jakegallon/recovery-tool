@@ -25,12 +25,12 @@ public class MFTRecord {
         }
         this.bytes = bytes;
 
-        int allocatedFlag = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, 0x16, 0x17), true);
+        int allocatedFlag = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x16, 0x17), true);
         if(allocatedFlag == 0x0000 || allocatedFlag == 0x0200) {
             isDeleted = true;
         }
-        int offset = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, 0x14, 0x15), true);
-        int recordSize = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, 0x18, 0x1B), true) - 8;
+        int offset = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x14, 0x15), true);
+        int recordSize = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x18, 0x1B), true) - 8;
 
         while (offset < recordSize){
             long attributeID = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset, offset+3), true);
@@ -40,9 +40,9 @@ public class MFTRecord {
             }
             attributeOffsets.put(attribute, offset);
             if(attribute == Attribute.EA) {
-                offset += (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true) & 0xff);
+                offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true));
             }
-            offset += (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true) & 0xffff);
+            offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true));
         }
 
         if(attributeOffsets.containsKey(Attribute.DATA)){
@@ -56,8 +56,8 @@ public class MFTRecord {
         if(!attributeOffsets.containsKey(attribute)) throw new RuntimeException("An MFTRecord received request for attribute '" + attribute + "', which does not exist in that MFTRecord.");
         int startPos = attributeOffsets.get(attribute);
         int endPos;
-        if(attribute == Attribute.EA) endPos = startPos + (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x5), true) & 0xff);
-        else endPos = startPos + (Utility.byteArrayToInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x7) , true) & 0xffff);
+        if(attribute == Attribute.EA) endPos = startPos + (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x5), true));
+        else endPos = startPos + (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x7) , true));
         return(Arrays.copyOfRange(bytes, startPos, endPos));
     }
 
@@ -75,8 +75,8 @@ public class MFTRecord {
             return "";
         }
         int offset = attributeOffsets.get(Attribute.FILE_NAME);
-        int attributeSize = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset + 0x10, offset + 0x13), true);
-        int attributeOffset = Utility.byteArrayToInt(Arrays.copyOfRange(bytes, offset + 0x14, offset + 0x15), true);
+        int attributeSize = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset + 0x10, offset + 0x13), true);
+        int attributeOffset = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset + 0x14, offset + 0x15), true);
         attributeOffset += offset;
         byte[] attribute = Arrays.copyOfRange(bytes, attributeOffset, attributeOffset + attributeSize);
         int nameLength = attribute[0x40] & 0xFF;
@@ -125,7 +125,7 @@ public class MFTRecord {
 
         byte[] dataAttribute = getAttribute(Attribute.DATA);
         if(isDataResident) {
-            fileSizeBytes = Utility.byteArrayToInt(Arrays.copyOfRange(dataAttribute, 0x10, 0x14), true);
+            fileSizeBytes = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(dataAttribute, 0x10, 0x14), true);
         } else {
             fileSizeBytes = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true);
         }
