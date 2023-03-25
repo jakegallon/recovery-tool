@@ -26,18 +26,10 @@ public class NTFSInformation {
     private long MFTClusterLocation;
     private int MFTRecordLength;
 
-    private long MFTSizeBytes;
-
     private NTFSInformation(File root) {
         this.root = root;
 
         readBootSector();
-
-        try {
-            getMFTInformation();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private void readBootSector(){
@@ -57,12 +49,6 @@ public class NTFSInformation {
 
         if(bootSector[0x40] >= 0) MFTRecordLength = (bootSector[0x40] & 0xFF) * bytesPerCluster;
         else MFTRecordLength = (int) Math.pow(2.0, Math.abs(bootSector[0x40]));
-    }
-
-    private void getMFTInformation() throws IOException {
-        byte[] mftRecord = readFirstMFTRecord();
-        MFTRecord mftInformation = new MFTRecord(mftRecord);
-        MFTSizeBytes = mftInformation.getFileLengthBytes(bytesPerCluster);
     }
 
     private byte[] readFirstMFTRecord() throws IOException {
@@ -107,9 +93,5 @@ public class NTFSInformation {
 
     public int getMFTRecordLength() {
         return MFTRecordLength;
-    }
-
-    public long getMFTSizeBytes() {
-        return MFTSizeBytes;
     }
 }

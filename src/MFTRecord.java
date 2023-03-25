@@ -25,35 +25,43 @@ public class MFTRecord {
         }
         this.bytes = bytes;
 
-        int allocatedFlag = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x16, 0x17), true);
-        if(allocatedFlag == 0x0000 || allocatedFlag == 0x0200) {
-            isDeleted = true;
+        parseIsDeleted();
+        parseAttributeOffsets();
+        parseFileName();
+    }
+
+    public void parseDataAttribute() {
+        if(!attributeOffsets.containsKey(Attribute.DATA)) {
+            throw new RuntimeException("MFT Record for " + fileName + " has no 0x80 attribute");
         }
+        isDataResident = (bytes[attributeOffsets.get(Attribute.DATA) + 0x08] & 0xFF) != 1;
+    }
+
+    private void parseAttributeOffsets() {
         int offset = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x14, 0x15), true);
         int recordSize = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x18, 0x1B), true) - 8;
 
         while (offset < recordSize){
             long attributeID = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset, offset+3), true);
             Attribute attribute = getAttributeByID(attributeID);
-            if(attribute == null) {
-                break;
-            }
             attributeOffsets.put(attribute, offset);
             if(attribute == Attribute.EA) {
                 offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true));
+            } else {
+                offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true));
             }
-            offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true));
         }
+    }
 
-        if(attributeOffsets.containsKey(Attribute.DATA)){
-            isDataResident = (bytes[attributeOffsets.get(Attribute.DATA) + 0x08] & 0xFF) != 1;
+    private void parseIsDeleted() {
+        int allocatedFlag = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, 0x16, 0x17), true);
+        if(allocatedFlag == 0x0000 || allocatedFlag == 0x0200) {
+            isDeleted = true;
         }
-
-        fileName = getFileName();
     }
 
     public byte[] getAttribute(Attribute attribute) {
-        if(!attributeOffsets.containsKey(attribute)) throw new RuntimeException("An MFTRecord received request for attribute '" + attribute + "', which does not exist in that MFTRecord.");
+        if(!attributeOffsets.containsKey(attribute)) throw new RuntimeException("An MFTRecord received request for attribute '" + attribute + "', which does not exist in that MFTRecord");
         int startPos = attributeOffsets.get(attribute);
         int endPos;
         if(attribute == Attribute.EA) endPos = startPos + (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, startPos+0x4, startPos+0x5), true));
@@ -65,69 +73,89 @@ public class MFTRecord {
         for(Attribute attribute : Attribute.values()) {
             if(attribute.value == id) return attribute;
         }
-        return null;
+        throw new IllegalArgumentException("Invalid attribute ID: " + id);
     }
 
-    private final String fileName;
-
+    private String fileName;
     public String getFileName() {
+        return fileName;
+    }
+
+    public void parseFileName() {
         if(!attributeOffsets.containsKey(Attribute.FILE_NAME)){
-            return "";
+            fileName = "";
+            return;
         }
         int offset = attributeOffsets.get(Attribute.FILE_NAME);
         int attributeSize = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset + 0x10, offset + 0x13), true);
         int attributeOffset = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset + 0x14, offset + 0x15), true);
-        attributeOffset += offset;
-        byte[] attribute = Arrays.copyOfRange(bytes, attributeOffset, attributeOffset + attributeSize);
+        offset += attributeOffset;
+
+        byte[] attribute = Arrays.copyOfRange(bytes, offset, offset + attributeSize);
         int nameLength = attribute[0x40] & 0xFF;
         byte[] targetText = Arrays.copyOfRange(attribute, 0x42, 0x42 + (nameLength*2));
 
-        return new String(targetText, StandardCharsets.UTF_16LE);
+        fileName = new String(targetText, StandardCharsets.UTF_16LE);
     }
 
-    public long getFileLengthBytes(int bytesPerCluster) {
-        int offset = attributeOffsets.get(Attribute.DATA);
-        long startingVCN = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset+0x11, offset+0x17), true);
-        long endingVCN = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset+0x18, offset+0x1F), true);
-        long fileLengthClusters = endingVCN - startingVCN;
-        return fileLengthClusters * bytesPerCluster + bytesPerCluster;
+    private String fileExtension = "";
+    public String getFileExtension() {
+        return fileExtension;
     }
 
-    long fileSizeBytes;
-    String bornTime;
-    String modifiedTime;
-    String fileExtension;
+    private String creationTime;
+    public String getCreationTime() {
+        return creationTime;
+    }
 
-    private static final long WINDOWS_TO_UNIX_EPOCH = -116444736000000000L; //-116444736000000000L
+    private String modifiedTime;
+    public String getModifiedTime() {
+        return modifiedTime;
+    }
+
+    private long fileSizeBytes;
+    public long getFileSizeBytes() {
+        return fileSizeBytes;
+    }
 
     public void processAdditionalInformation() {
-        fileExtension = "";
+        parseDataAttribute();
+
+        fileExtension = parseFileExtension();
+        fileSizeBytes = parseFileSizeBytes();
+
+        byte[] standardInformationAttribute = getAttribute(Attribute.STANDARD_INFORMATION);
+        if(standardInformationAttribute[0x08] == 1) throw new RuntimeException("MFT Record for " + fileName + " has non-resident 0X10 attribute");
+        int standardInfoAttrOffset = standardInformationAttribute[0x14];
+
+        long bornTimeRaw = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(standardInformationAttribute, standardInfoAttrOffset, standardInfoAttrOffset + 0x08), true);
+        creationTime = parseWindowsFileTime(bornTimeRaw);
+
+        long modTimeRaw = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(standardInformationAttribute, standardInfoAttrOffset + 0x08, standardInfoAttrOffset + 0x10), true);
+        modifiedTime = parseWindowsFileTime(modTimeRaw);
+    }
+
+    private String parseFileExtension() {
         int dotIndex = fileName.lastIndexOf('.');
         if(dotIndex >=0) {
             fileExtension = fileName.substring(dotIndex);
         }
+        return fileExtension;
+    }
 
-        byte[] standardInformationAttribute = getAttribute(Attribute.STANDARD_INFORMATION);
-        if(standardInformationAttribute[0x08] == 1) throw new RuntimeException("MFT Record for " + fileName + " has non-resident 0X10 attribute.");
-        int standardInformationInternalAttributeOffset = standardInformationAttribute[0x14];
-
-        long bornTimeRaw = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(standardInformationAttribute, standardInformationInternalAttributeOffset, standardInformationInternalAttributeOffset + 0x08), true);
-        long bornTimeUnix = (bornTimeRaw + WINDOWS_TO_UNIX_EPOCH) / 10000L;
-
-        long modTimeRaw = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(standardInformationAttribute, standardInformationInternalAttributeOffset + 0x08, standardInformationInternalAttributeOffset + 0x10), true);
-        long modTimeUnix = (modTimeRaw + WINDOWS_TO_UNIX_EPOCH) / 10000L;
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        dateFormat.setTimeZone(TimeZone.getDefault());
-
-        bornTime = dateFormat.format(bornTimeUnix);
-        modifiedTime = dateFormat.format(modTimeUnix);
-
-        byte[] dataAttribute = getAttribute(Attribute.DATA);
+    private long parseFileSizeBytes() {byte[] dataAttribute = getAttribute(Attribute.DATA);
         if(isDataResident) {
-            fileSizeBytes = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(dataAttribute, 0x10, 0x14), true);
+            return Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(dataAttribute, 0x10, 0x14), true);
         } else {
-            fileSizeBytes = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true);
+            return Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true);
         }
+    }
+
+    private static final long WINDOWS_TO_UNIX_EPOCH = -116444736000000000L; //-116444736000000000L
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+    private String parseWindowsFileTime(long fileTimeRaw) {
+        long fileTimeUnix = (fileTimeRaw + WINDOWS_TO_UNIX_EPOCH) / 10000L;
+        return DATE_FORMAT.format(fileTimeUnix);
     }
 }

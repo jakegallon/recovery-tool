@@ -102,6 +102,7 @@ public class ScanPanel extends StepPanel {
         FileChannel diskChannel = diskAccess.getChannel();
 
         MFTRecord mft = new MFTRecord(Utility.readMFTRecord(diskChannel, ntfsInformation.getMFTByteLocation()));
+        mft.parseDataAttribute();
         if(mft.isDataResident()) {
             throw new RuntimeException("$MFT has resident data attribute");
         }
