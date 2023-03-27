@@ -43,13 +43,23 @@ public class MFTRecord {
 
         while (offset < recordSize){
             long attributeID = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(bytes, offset, offset+3), true);
-            Attribute attribute = getAttributeByID(attributeID);
-            attributeOffsets.put(attribute, offset);
-            if(attribute == Attribute.EA) {
-                offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true));
-            } else {
-                offset += (Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true));
+            Attribute attribute;
+            try {
+                attribute = getAttributeByID(attributeID);
+            } catch (IllegalArgumentException e) {
+                break;
             }
+            attributeOffsets.put(attribute, offset);
+
+            int targetOffset;
+            if(attribute == Attribute.EA)
+                targetOffset = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x5), true);
+            else
+                targetOffset = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bytes, offset+0x4, offset+0x7) , true);
+
+            if (targetOffset == 0)
+                break;
+            offset += targetOffset;
         }
     }
 
@@ -151,7 +161,7 @@ public class MFTRecord {
         }
     }
 
-    private static final long WINDOWS_TO_UNIX_EPOCH = -116444736000000000L; //-116444736000000000L
+    private static final long WINDOWS_TO_UNIX_EPOCH = -116444736000000000L;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     private String parseWindowsFileTime(long fileTimeRaw) {
