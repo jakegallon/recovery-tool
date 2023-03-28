@@ -34,21 +34,38 @@ public class FilterPanel extends StepPanel {
     };
     private RowFilter<Object, Object> queryFilter;
 
-    private final NTFSRecordTable recordTable;
     private JTextField searchField;
     private JCheckBox hideEmptyFilesCheckbox;
     private JCheckBox hideEmptyExtensionsCheckbox;
 
+    private final NTFSRecordTable recordTable;
+    private final JLabel tableInformation = new JLabel();
+
     List<RowFilter<Object, Object>> filters = new ArrayList<>();
 
     public FilterPanel() {
-        setLayout(new BorderLayout());
+        SpringLayout springLayout = new SpringLayout();
+        setLayout(springLayout);
+
+        JPanel content = new JPanel();
+        BorderLayout borderLayout = new BorderLayout();
+        borderLayout.setVgap(4);
+        content.setLayout(borderLayout);
 
         JPanel filterPanel = createFilterPanel();
-        add(filterPanel, BorderLayout.PAGE_START);
+        content.add(filterPanel, BorderLayout.PAGE_START);
 
+        JPanel tableHolder = new JPanel(new BorderLayout());
         recordTable = new NTFSRecordTable();
-        add(new JScrollPane(recordTable), BorderLayout.CENTER);
+        tableHolder.add(new JScrollPane(recordTable), BorderLayout.CENTER);
+        tableHolder.add(tableInformation, BorderLayout.PAGE_END);
+        content.add(tableHolder, BorderLayout.CENTER);
+
+        add(content);
+        springLayout.putConstraint(SpringLayout.NORTH, content, 10, SpringLayout.NORTH, this);
+        springLayout.putConstraint(SpringLayout.SOUTH, content, -10, SpringLayout.SOUTH, this);
+        springLayout.putConstraint(SpringLayout.WEST, content, 10, SpringLayout.WEST, this);
+        springLayout.putConstraint(SpringLayout.EAST, content, -10, SpringLayout.EAST, this);
 
         doFilter();
     }
@@ -59,19 +76,31 @@ public class FilterPanel extends StepPanel {
         } else {
             recordTable.setRowFilter(RowFilter.andFilter(filters));
         }
+        tableInformation.setText(recordTable.getModel().getRowCount() + " rows, " +
+                recordTable.getRowSorter().getViewRowCount() + " shown, " +
+                (recordTable.getModel().getRowCount() - recordTable.getRowSorter().getViewRowCount()) + " filtered."
+        );
     }
 
     private JPanel createFilterPanel() {
-        JPanel filterPanel = new JPanel(new BorderLayout());
+        JPanel filterPanel = new JPanel();
+        filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.PAGE_AXIS));
 
         initializeSearchField();
-        filterPanel.add(searchField, BorderLayout.CENTER);
-
         initializeHideEmptyExtensionsCheckbox();
-        filterPanel.add(hideEmptyExtensionsCheckbox, BorderLayout.LINE_END);
-
         initializeHideEmptyFilesCheckbox();
-        filterPanel.add(hideEmptyFilesCheckbox, BorderLayout.LINE_START);
+
+        JPanel queryPanel = new JPanel(new BorderLayout());
+        queryPanel.add(new JLabel("Search: "), BorderLayout.LINE_START);
+        queryPanel.add(searchField, BorderLayout.CENTER);
+
+        JPanel filters = new JPanel(new GridLayout(2, 2));
+        filters.add(hideEmptyExtensionsCheckbox);
+        filters.add(new JPanel());
+        filters.add(hideEmptyFilesCheckbox);
+        filters.add(queryPanel);
+
+        filterPanel.add(filters);
 
         return filterPanel;
     }
