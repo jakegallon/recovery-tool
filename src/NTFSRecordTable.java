@@ -5,6 +5,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
+import javafx.util.Pair;
 
 public class NTFSRecordTable extends JTable {
 
@@ -129,7 +130,23 @@ public class NTFSRecordTable extends JTable {
                 public void setHorizontalAlignment(int alignment) {
                     super.setHorizontalAlignment(JLabel.RIGHT);
                 }
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    long fileSize = (Long) value;
 
+                    Pair<String, Long> storageUnitInfo = Utility.getUnitAndUnitSize(fileSize);
+                    String storageUnit = storageUnitInfo.getKey();
+                    long storageUnitSize = storageUnitInfo.getValue();
+
+                    String convertedFileSize;
+                    if(storageUnitSize != 0L) {
+                        convertedFileSize = String.format("%.2f", (float) fileSize / storageUnitSize);
+                    } else {
+                        convertedFileSize = String.valueOf(fileSize);
+                    }
+
+                    return super.getTableCellRendererComponent(table, convertedFileSize + storageUnit, isSelected, hasFocus, row, column);
+                }
             };
         return super.getCellRenderer(row, column);
     }
