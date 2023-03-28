@@ -34,12 +34,14 @@ public class SelectDirectoryComponent extends JPanel {
         public void mouseEntered(MouseEvent e) {
             super.mouseEntered(e);
             browseButton.setBackground(Frame.SELECT_COLOR);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
             super.mouseExited(e);
             browseButton.setBackground(new Color(0, true));
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     };
 

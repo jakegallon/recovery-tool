@@ -47,6 +47,7 @@ public class PartitionSelectionComponent extends JPanel {
             PartitionWidget partitionWidget = new PartitionWidget(f);
             partitionPanel.add(partitionWidget);
         }
+        partitionPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
     private void initializePartitionScrollPane() {
