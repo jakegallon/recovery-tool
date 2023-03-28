@@ -9,11 +9,15 @@ import java.util.concurrent.Executors;
 public class ScanPanel extends StepPanel {
 
     private int deletedFilesFound = 0;
-    private final JProgressBar readProgressBar;
+    private final JProgressBar readProgressBar = new JProgressBar(0, 0);
 
     @Override
     public void onNextStep() {
+        FilterPanel filterPanel = new FilterPanel();
+        Frame.setStepPanel(filterPanel);
 
+        BottomPanel.setNextButtonEnabled(false);
+        BottomPanel.setBackButtonEnabled(true);
     }
 
     @Override
@@ -40,14 +44,13 @@ public class ScanPanel extends StepPanel {
 
     private void readDrive() {
         try {
-            printAllFileNames();
+            scanRootForDeletedFiles();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public ScanPanel() {
-        readProgressBar = new JProgressBar(0, 0);
         Thread readThread = new Thread(this::readDrive);
         readThread.start();
 
@@ -94,7 +97,7 @@ public class ScanPanel extends StepPanel {
         foundFilesLabel.setText(deletedFilesFound + " deleted files found.");
     }
 
-    private void printAllFileNames() throws IOException {
+    private void scanRootForDeletedFiles() throws IOException {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         int mftRecordLength = ntfsInformation.getMFTRecordLength();
 
@@ -147,6 +150,7 @@ public class ScanPanel extends StepPanel {
                     MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
                     if(mftRecord.isDeleted()){
                         deletedFilesFound++;
+                        deletedRecords.add(mftRecord);
                         addRecordToUpdateQueue(mftRecord);
                     }
                 }
