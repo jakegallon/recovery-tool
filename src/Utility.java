@@ -1,3 +1,5 @@
+import javafx.util.Pair;
+
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -5,6 +7,19 @@ import java.nio.channels.FileChannel;
 import java.util.Arrays;
 
 public class Utility {
+
+    public static Pair<String, Long> getUnitAndUnitSize(long bytes) {
+        String[] storageUnits = {" B", " KB", " MB", " GB", " TB", " PB", " EB"};
+        long[] bytesPerUnit = {0, 1024, 1048576, 1073741824, 1099511627776L, 1125899906842624L, 1152921504606846976L};
+
+        int i = 0;
+        while(bytes >= bytesPerUnit[i]) {
+            i++;
+            if(i + 1 > bytesPerUnit.length) break;
+        }
+
+        return new Pair<>(storageUnits[i-1], bytesPerUnit[i-1]);
+    }
 
     public static int byteArrayToUnsignedInt(byte[] bytes, boolean isReversed) {
         if(isReversed) {

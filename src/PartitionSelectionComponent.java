@@ -99,21 +99,21 @@ public class PartitionSelectionComponent extends JPanel {
         long unallocatedSpace = fs.getUnallocatedSpace();
         long usedSpace = totalSpace - unallocatedSpace;
 
-        Pair<String, Long> storageUnitInfo = getStorageUnitInfo(totalSpace);
+        Pair<String, Long> storageUnitInfo = Utility.getUnitAndUnitSize(totalSpace);
         String storageUnit = storageUnitInfo.getKey();
-        long storageUnitBytes = storageUnitInfo.getValue();
+        long storageUnitSize = storageUnitInfo.getValue();
 
         DecimalFormat df = new DecimalFormat("#.##");
 
         JLabel storageType = new JLabel("File System: " + fs.type());
         informationPanel.add(storageType);
 
-        String convertedUsedSpace = df.format((double) usedSpace / storageUnitBytes);
-        String convertedTotalSpace = df.format((double) totalSpace / storageUnitBytes);
+        String convertedUsedSpace = df.format((double) usedSpace / storageUnitSize);
+        String convertedTotalSpace = df.format((double) totalSpace / storageUnitSize);
         JLabel storageSize = new JLabel("Used space: " + convertedUsedSpace + storageUnit + " / " + convertedTotalSpace + storageUnit + " (" + usedSpace  + " B / " + totalSpace + " B)");
         informationPanel.add(storageSize);
 
-        String convertedUnallocatedSpace = df.format((double) unallocatedSpace / storageUnitBytes);
+        String convertedUnallocatedSpace = df.format((double) unallocatedSpace / storageUnitSize);
         JLabel unallocatedSize = new JLabel("Unallocated Space: " + convertedUnallocatedSpace + storageUnit + " (" + unallocatedSpace + " B)");
         informationPanel.add(unallocatedSize);
 
@@ -123,19 +123,6 @@ public class PartitionSelectionComponent extends JPanel {
 
         informationPanel.repaint();
         informationPanel.revalidate();
-    }
-
-    private Pair<String, Long> getStorageUnitInfo(long totalSpace) {
-        String[] storageUnits = {" B", " KB", " MB", " GB", " TB", " PB", " EB"};
-        long[] bytesPerUnit = {0, 1024, 1048576, 1073741824, 1099511627776L, 1125899906842624L, 1152921504606846976L};
-
-        int i = 0;
-        while(totalSpace >= bytesPerUnit[i]) {
-            i++;
-            if(i + 1 > bytesPerUnit.length) break;
-        }
-
-        return new Pair<>(storageUnits[i-1], bytesPerUnit[i-1]);
     }
 
     private void displayNtfsInformation() {
