@@ -8,9 +8,6 @@ import java.util.concurrent.Executors;
 
 public class ScanPanel extends StepPanel {
 
-    private int deletedFilesFound = 0;
-    private final JProgressBar readProgressBar = new JProgressBar(0, 0);
-
     @Override
     public void onNextStep() {
         FilterPanel filterPanel = new FilterPanel();
@@ -30,9 +27,20 @@ public class ScanPanel extends StepPanel {
     }
 
     private final Timer scanTimer;
-    private final JLabel progressLabel;
-    private final JLabel progressPercentLabel;
-    private final JLabel foundFilesLabel;
+
+    private final JProgressBar readProgressBar = new JProgressBar(0, 0);
+    private JLabel readProgressLabel;
+    private JLabel readProgressPercentLabel;
+    private JLabel foundFilesLabel;
+
+    private int deletedFilesFound = 0;
+
+    private final JProgressBar processProgressBar = new JProgressBar(0, 0);
+    private JLabel processProgressLabel;
+    private JLabel processProgressPercentLabel;
+    private JLabel processedFilesLabel;
+
+    private int deletedFilesProcessed = 0;
 
     private static final ArrayList<MFTRecord> deletedRecords = new ArrayList<>();
     public static ArrayList<MFTRecord> getDeletedRecords() {
@@ -56,45 +64,94 @@ public class ScanPanel extends StepPanel {
 
         setLayout(springLayout);
 
+        addReadFeedbackUI();
+        addProcessFeedbackUI();
+
+        scanTimer = new Timer(200, e -> updateInterface());
+        scanTimer.start();
+    }
+
+    private void addReadFeedbackUI() {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         JLabel scanningDriveLabel = new JLabel("Scanning drive " + ntfsInformation.getRoot().toString().substring(4) + " ");
         add(scanningDriveLabel);
         add(readProgressBar);
 
-        progressLabel = new JLabel("0 / 0 files");
-        add(progressLabel);
-        progressPercentLabel = new JLabel("0%");
-        add(progressPercentLabel);
+        readProgressLabel = new JLabel("0 / 0 files");
+        add(readProgressLabel);
+        readProgressPercentLabel = new JLabel("0%");
+        add(readProgressPercentLabel);
         foundFilesLabel = new JLabel("0 deleted files found.");
         add(foundFilesLabel);
 
         springLayout.putConstraint(SpringLayout.NORTH, scanningDriveLabel, 10, SpringLayout.NORTH, this);
         springLayout.putConstraint(SpringLayout.WEST, scanningDriveLabel, 10, SpringLayout.WEST, this);
-        springLayout.putConstraint(SpringLayout.NORTH, progressPercentLabel, 0, SpringLayout.NORTH, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.WEST, progressPercentLabel, 0, SpringLayout.EAST, scanningDriveLabel);
+        springLayout.putConstraint(SpringLayout.NORTH, readProgressPercentLabel, 0, SpringLayout.NORTH, scanningDriveLabel);
+        springLayout.putConstraint(SpringLayout.WEST, readProgressPercentLabel, 0, SpringLayout.EAST, scanningDriveLabel);
         springLayout.putConstraint(SpringLayout.NORTH, readProgressBar, 10, SpringLayout.SOUTH, scanningDriveLabel);
         springLayout.putConstraint(SpringLayout.EAST, readProgressBar, -10, SpringLayout.EAST, this);
         springLayout.putConstraint(SpringLayout.WEST, readProgressBar, 0, SpringLayout.WEST, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, progressLabel, 0, SpringLayout.NORTH, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.EAST, progressLabel, 0, SpringLayout.EAST, readProgressBar);
+        springLayout.putConstraint(SpringLayout.NORTH, readProgressLabel, 0, SpringLayout.NORTH, scanningDriveLabel);
+        springLayout.putConstraint(SpringLayout.EAST, readProgressLabel, 0, SpringLayout.EAST, readProgressBar);
         springLayout.putConstraint(SpringLayout.NORTH, foundFilesLabel, 10, SpringLayout.SOUTH, readProgressBar);
         springLayout.putConstraint(SpringLayout.WEST, foundFilesLabel, 0, SpringLayout.WEST, scanningDriveLabel);
-
-        scanTimer = new Timer(200, e -> updateScanInterface());
-        scanTimer.start();
     }
 
-    private void updateScanInterface() {
+    private void addProcessFeedbackUI() {
+        JLabel processRecordsLabel = new JLabel("Processing deleted records ");
+        add(processRecordsLabel);
+        add(processProgressBar);
+
+        processProgressLabel = new JLabel("0 / 0 files");
+        add(processProgressLabel);
+        processProgressPercentLabel = new JLabel("0%");
+        add(processProgressPercentLabel);
+        processedFilesLabel = new JLabel("0 deleted files processed.");
+        add(processedFilesLabel);
+
+        springLayout.putConstraint(SpringLayout.NORTH, processRecordsLabel, 25, SpringLayout.SOUTH, foundFilesLabel);
+        springLayout.putConstraint(SpringLayout.WEST, processRecordsLabel, 10, SpringLayout.WEST, this);
+        springLayout.putConstraint(SpringLayout.NORTH, processProgressPercentLabel, 0, SpringLayout.NORTH, processRecordsLabel);
+        springLayout.putConstraint(SpringLayout.WEST, processProgressPercentLabel, 0, SpringLayout.EAST, processRecordsLabel);
+        springLayout.putConstraint(SpringLayout.NORTH, processProgressBar, 10, SpringLayout.SOUTH, processRecordsLabel);
+        springLayout.putConstraint(SpringLayout.EAST, processProgressBar, -10, SpringLayout.EAST, this);
+        springLayout.putConstraint(SpringLayout.WEST, processProgressBar, 0, SpringLayout.WEST, processRecordsLabel);
+        springLayout.putConstraint(SpringLayout.NORTH, processProgressLabel, 0, SpringLayout.NORTH, processRecordsLabel);
+        springLayout.putConstraint(SpringLayout.EAST, processProgressLabel, 0, SpringLayout.EAST, processProgressBar);
+        springLayout.putConstraint(SpringLayout.NORTH, processedFilesLabel, 10, SpringLayout.SOUTH, processProgressBar);
+        springLayout.putConstraint(SpringLayout.WEST, processedFilesLabel, 0, SpringLayout.WEST, processRecordsLabel);
+    }
+
+    private void updateInterface() {
+        updateReadInterface();
+        updateProcessInterface();
+    }
+
+    private void updateReadInterface() {
         int val = readProgressBar.getValue();
         int max = readProgressBar.getMaximum();
 
-        progressLabel.setText(val + " / " + max  + " objects");
+        readProgressLabel.setText(val + " / " + max  + " files");
 
         double percent = (double) val/max;
         int percentInt = (int) (percent * 100);
-        progressPercentLabel.setText(percentInt + "%");
+        readProgressPercentLabel.setText(percentInt + "%");
 
         foundFilesLabel.setText(deletedFilesFound + " deleted files found.");
+    }
+
+    private void updateProcessInterface() {
+        int val = deletedFilesProcessed;
+        processProgressBar.setValue(val);
+        int max = processProgressBar.getMaximum();
+
+        processProgressLabel.setText(val + " / " + max  + " files");
+
+        double percent = (double) val/max;
+        int percentInt = (int) (percent * 100);
+        processProgressPercentLabel.setText(percentInt + "%");
+
+        processedFilesLabel.setText(deletedFilesProcessed + " deleted files processed.");
     }
 
     private void scanRootForDeletedFiles() throws IOException {
@@ -164,7 +221,7 @@ public class ScanPanel extends StepPanel {
 
     private void onScanEnd() {
         scanTimer.stop();
-        updateScanInterface();
+        updateInterface();
         BottomPanel.setNextButtonEnabled(true);
     }
 
@@ -178,6 +235,7 @@ public class ScanPanel extends StepPanel {
             isProcessing = true;
             startProcessingThread();
         }
+        processProgressBar.setMaximum(deletedFilesFound);
     }
 
     private void startProcessingThread() {
@@ -192,5 +250,6 @@ public class ScanPanel extends StepPanel {
 
     private void process(MFTRecord mftRecord) {
         mftRecord.processAdditionalInformation();
+        deletedFilesProcessed ++;
     }
 }
