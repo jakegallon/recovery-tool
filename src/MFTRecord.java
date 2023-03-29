@@ -129,12 +129,22 @@ public class MFTRecord {
     }
 
     public void processAdditionalInformation() {
-        parseDataAttribute();
+        try {
+            parseDataAttribute();
+        } catch (RuntimeException e) {
+            return;
+        }
 
         fileExtension = parseFileExtension();
         fileSizeBytes = parseFileSizeBytes();
 
-        byte[] standardInformationAttribute = getAttribute(Attribute.STANDARD_INFORMATION);
+        byte[] standardInformationAttribute;
+        try {
+            standardInformationAttribute = getAttribute(Attribute.STANDARD_INFORMATION);
+        } catch (RuntimeException e) {
+            return;
+        }
+
         if(standardInformationAttribute[0x08] == 1) throw new RuntimeException("MFT Record for " + fileName + " has non-resident 0X10 attribute");
         int standardInfoAttrOffset = standardInformationAttribute[0x14];
 
