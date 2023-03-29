@@ -21,8 +21,10 @@ public class PartitionSelectionComponent extends JPanel {
     private PartitionWidget selectedPartitionWidget;
 
     private final SpringLayout springLayout = new SpringLayout();
+    private final PartitionPanel parent;
 
-    public PartitionSelectionComponent() {
+    public PartitionSelectionComponent(PartitionPanel parent) {
+        this.parent = parent;
         setLayout(springLayout);
 
         initializePartitionPanel();
@@ -80,10 +82,10 @@ public class PartitionSelectionComponent extends JPanel {
         selectedPartitionWidget.setBackground(Frame.SELECT_COLOR);
 
         onNewSelectedPartition();
-        BottomPanel.setNextButtonEnabled(true);
     }
 
     private void onNewSelectedPartition() {
+        parent.notifyPartitionSelected(selectedPartitionWidget.getRoot());
         try {
             displaySelectedPartitionInformation();
         } catch (IOException e) {

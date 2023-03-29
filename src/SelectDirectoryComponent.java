@@ -27,6 +27,7 @@ public class SelectDirectoryComponent extends JPanel {
                 selectedFile = fileChooser.getSelectedFile();
                 String filePath = selectedFile.getAbsolutePath();
                 fileLabel.setText(filePath);
+                parent.notifyOutputLocationSelected(selectedFile);
             }
         }
 
@@ -45,7 +46,10 @@ public class SelectDirectoryComponent extends JPanel {
         }
     };
 
-    public SelectDirectoryComponent() {
+    private final PartitionPanel parent;
+    public SelectDirectoryComponent(PartitionPanel parent) {
+        this.parent = parent;
+
         setBackground(Frame.DARK_COLOR);
         addMouseListener(mouseAdapter);
         setLayout(new BorderLayout());
