@@ -95,9 +95,11 @@ public class NTFSRecordTable extends JTable {
 
                 MFTRecord thisRecord = (MFTRecord) tableModel.getValueAt(row, getColumnModel().getColumnIndex(MFT_RECORD_COLUMN));
                 if(isSelected) {
-                    recordsToRecover.add(thisRecord);
+                    if(!recordsToRecover.contains(thisRecord))
+                        recordsToRecover.add(thisRecord);
                 } else {
-                    recordsToRecover.remove(thisRecord);
+                    while(recordsToRecover.contains(thisRecord))
+                        recordsToRecover.remove(thisRecord);
                 }
                 onRecordsToRecoverUpdated();
             }
