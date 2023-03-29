@@ -3,8 +3,7 @@ import javax.swing.Timer;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ScanPanel extends StepPanel {
 
@@ -26,6 +25,7 @@ public class ScanPanel extends StepPanel {
         BottomPanel.setBackButtonEnabled(false);
     }
 
+    boolean isReading = false;
     private final Timer scanTimer;
 
     private final JProgressBar readProgressBar = new JProgressBar(0, 0);
@@ -51,6 +51,7 @@ public class ScanPanel extends StepPanel {
 
 
     private void readDrive() {
+        isReading = true;
         try {
             scanRootForDeletedFiles();
         } catch (IOException e) {
@@ -98,7 +99,7 @@ public class ScanPanel extends StepPanel {
     }
 
     private void addProcessFeedbackUI() {
-        JLabel processRecordsLabel = new JLabel("Processing deleted records ");
+        JLabel processRecordsLabel = new JLabel("Processing deleted records: ");
         add(processRecordsLabel);
         add(processProgressBar);
 
@@ -125,6 +126,8 @@ public class ScanPanel extends StepPanel {
     private void updateInterface() {
         updateReadInterface();
         updateProcessInterface();
+
+        if(!isReading && updateQueue.isEmpty()) onProcessingEnd();
     }
 
     private void updateReadInterface() {
@@ -216,36 +219,33 @@ public class ScanPanel extends StepPanel {
             currentFileOffset += dataRun.getValue();
         }
         diskAccess.close();
-        onScanEnd();
+        isReading = false;
     }
 
-    private void onScanEnd() {
+    private void onProcessingEnd() {
         scanTimer.stop();
-        updateInterface();
         BottomPanel.setNextButtonEnabled(true);
     }
 
-    private final List<MFTRecord> updateQueue = new ArrayList<>();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ConcurrentLinkedQueue<MFTRecord> updateQueue = new ConcurrentLinkedQueue<>();
     private volatile boolean isProcessing = false;
 
     public synchronized void addRecordToUpdateQueue(MFTRecord mftRecord) {
         updateQueue.add(mftRecord);
         if (!isProcessing) {
             isProcessing = true;
-            startProcessingThread();
+            Thread processingThread = new Thread(this::processQueue);
+            processingThread.setDaemon(true);
+            processingThread.start();
         }
         processProgressBar.setMaximum(deletedFilesFound);
     }
 
-    private void startProcessingThread() {
-        executor.submit(() -> {
-            while (!updateQueue.isEmpty()) {
-                process(updateQueue.get(0));
-                updateQueue.remove(0);
-            }
-            isProcessing = false;
-        });
+    private void processQueue() {
+        while (!updateQueue.isEmpty()) {
+            process(updateQueue.poll());
+        }
+        isProcessing = false;
     }
 
     private void process(MFTRecord mftRecord) {
