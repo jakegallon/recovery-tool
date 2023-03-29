@@ -1,12 +1,14 @@
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.io.File;
 
 public class PartitionPanel extends StepPanel {
 
-    private final SpringLayout springLayout = new SpringLayout();
     private static boolean hasPartitionSelected = false;
     private boolean hasOutputLocationSelected = false;
+
+    private int errorMessagePanelIndex = 0;
 
     @Override
     public void onNextStep() {
@@ -23,32 +25,34 @@ public class PartitionPanel extends StepPanel {
     }
 
     public PartitionPanel() {
-        setLayout(springLayout);
+        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         Font headerFont = new Font("Arial", Font.PLAIN, 16);
 
         JLabel outputLocationLabel = new JLabel("Select Output Location:");
         outputLocationLabel.setFont(headerFont);
+        outputLocationLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(outputLocationLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, outputLocationLabel, 10, SpringLayout.NORTH, this);
-        springLayout.putConstraint(SpringLayout.WEST, outputLocationLabel, 10, SpringLayout.WEST, this);
 
         SelectDirectoryComponent selectDirectoryComponent = new SelectDirectoryComponent(this);
-        springLayout.putConstraint(SpringLayout.NORTH, selectDirectoryComponent, 3, SpringLayout.SOUTH, outputLocationLabel);
-        springLayout.putConstraint(SpringLayout.WEST, selectDirectoryComponent, 0, SpringLayout.WEST, outputLocationLabel);
-        springLayout.putConstraint(SpringLayout.EAST, selectDirectoryComponent, -10, SpringLayout.EAST, this);
+        selectDirectoryComponent.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(selectDirectoryComponent);
+        add(Box.createVerticalStrut(5));
+        add(Box.createVerticalStrut(5));
 
         JLabel partitionSelectionLabel = new JLabel("Select Partition:");
         partitionSelectionLabel.setFont(headerFont);
+        partitionSelectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(partitionSelectionLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, partitionSelectionLabel, 3, SpringLayout.SOUTH, selectDirectoryComponent);
-        springLayout.putConstraint(SpringLayout.WEST, partitionSelectionLabel, 0, SpringLayout.WEST, outputLocationLabel);
 
         PartitionSelectionComponent partitionSelectionComponent = new PartitionSelectionComponent(this);
-        springLayout.putConstraint(SpringLayout.NORTH, partitionSelectionComponent, 3, SpringLayout.SOUTH, partitionSelectionLabel);
-        springLayout.putConstraint(SpringLayout.WEST, partitionSelectionComponent, 0, SpringLayout.WEST, outputLocationLabel);
-        springLayout.putConstraint(SpringLayout.EAST, partitionSelectionComponent, -10, SpringLayout.EAST, this);
+        partitionSelectionComponent.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(partitionSelectionComponent);
+
+        for (int i = 0; i < getComponents().length; i++) {
+            if(getComponents()[i] == selectDirectoryComponent)
+                errorMessagePanelIndex = i + 2;
+        }
     }
 
     private File partition;
@@ -76,8 +80,42 @@ public class PartitionPanel extends StepPanel {
 
         if(!outputLetter.equals(partitionLetter)) {
             BottomPanel.setNextButtonEnabled(true);
+            if(errorMessagePanel != null) remove(errorMessagePanel);
+            errorMessagePanel = null;
         } else {
             BottomPanel.setNextButtonEnabled(false);
+            addErrorMessage();
+        }
+    }
+
+    private JPanel errorMessagePanel;
+    private void addErrorMessage() {
+        if (errorMessagePanel != null) {
+            add(errorMessagePanel, errorMessagePanelIndex);
+        } else {
+            errorMessagePanel = new JPanel();
+            errorMessagePanel.setBorder(new LineBorder(Color.red, 1));
+            BoxLayout boxLayout = new BoxLayout(errorMessagePanel, BoxLayout.X_AXIS);
+            errorMessagePanel.setLayout(boxLayout);
+
+            JLabel exclamationMark = new JLabel("!");
+            exclamationMark.setForeground(Color.RED);
+
+            JLabel errorMessage = new JLabel("<html>The output location cannot be on the same partition that you are recovering files from.<br>This is because recovering files can may overwrite the data being used to recover files which have not been recovered yet.</html>");
+            errorMessage.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+
+            errorMessagePanel.add(Box.createHorizontalStrut(4));
+            errorMessagePanel.add(exclamationMark);
+            errorMessagePanel.add(Box.createHorizontalStrut(4));
+            errorMessagePanel.add(errorMessage);
+            errorMessagePanel.add(Box.createHorizontalStrut(4));
+
+            int componentHeight = (int) errorMessage.getPreferredSize().getHeight();
+            errorMessagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, componentHeight));
+            exclamationMark.setFont(new Font(Font.SANS_SERIF, Font.BOLD, componentHeight+10));
+
+            errorMessagePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(errorMessagePanel, errorMessagePanelIndex);
         }
     }
 }
