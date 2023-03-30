@@ -8,7 +8,11 @@ import java.util.List;
 public class FilterPanel extends StepPanel {
     @Override
     public void onNextStep() {
+        RecoveryPanel recoveryPanel = new RecoveryPanel(recordTable.getRecordsToRecover());
+        Frame.setStepPanel(recoveryPanel);
 
+        BottomPanel.setNextButtonEnabled(false);
+        BottomPanel.setBackButtonEnabled(true);
     }
 
     @Override
