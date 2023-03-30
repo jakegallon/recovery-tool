@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
@@ -28,17 +29,11 @@ public class ScanPanel extends StepPanel {
     boolean isReading = false;
     private final Timer scanTimer;
 
-    private final JProgressBar readProgressBar = new JProgressBar(0, 0);
-    private JLabel readProgressLabel;
-    private JLabel readProgressPercentLabel;
     private JLabel foundFilesLabel;
 
     private int deletedFilesFound = 0;
-
-    private final JProgressBar processProgressBar = new JProgressBar(0, 0);
-    private JLabel processProgressLabel;
-    private JLabel processProgressPercentLabel;
-    private JLabel processedFilesLabel;
+    private DetailedProgressBar readProgressBar;
+    private DetailedProgressBar processProgressBar;
 
     private int deletedFilesProcessed = 0;
 
@@ -46,9 +41,6 @@ public class ScanPanel extends StepPanel {
     public static ArrayList<MFTRecord> getDeletedRecords() {
         return deletedRecords;
     }
-
-    private static final SpringLayout springLayout = new SpringLayout();
-
 
     private void readDrive() {
         isReading = true;
@@ -63,7 +55,8 @@ public class ScanPanel extends StepPanel {
         Thread readThread = new Thread(this::readDrive);
         readThread.start();
 
-        setLayout(springLayout);
+        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        setBorder(new EmptyBorder(10, 10, 10, 10));
 
         addReadFeedbackUI();
         addProcessFeedbackUI();
@@ -74,53 +67,24 @@ public class ScanPanel extends StepPanel {
 
     private void addReadFeedbackUI() {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
-        JLabel scanningDriveLabel = new JLabel("Scanning drive " + ntfsInformation.getRoot().toString().substring(4) + " ");
-        add(scanningDriveLabel);
-        add(readProgressBar);
 
-        readProgressLabel = new JLabel("0 / 0 files");
-        add(readProgressLabel);
-        readProgressPercentLabel = new JLabel("0%");
-        add(readProgressPercentLabel);
+        readProgressBar = new DetailedProgressBar();
+        readProgressBar.setPercentageLabelPrefix("Scanning drive " + ntfsInformation.getRoot().toString().substring(4));
+        readProgressBar.setProgressLabelSuffix("files");
+        add(readProgressBar);
+        add(Box.createVerticalStrut(10));
+
         foundFilesLabel = new JLabel("0 deleted files found.");
         add(foundFilesLabel);
-
-        springLayout.putConstraint(SpringLayout.NORTH, scanningDriveLabel, 10, SpringLayout.NORTH, this);
-        springLayout.putConstraint(SpringLayout.WEST, scanningDriveLabel, 10, SpringLayout.WEST, this);
-        springLayout.putConstraint(SpringLayout.NORTH, readProgressPercentLabel, 0, SpringLayout.NORTH, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.WEST, readProgressPercentLabel, 0, SpringLayout.EAST, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, readProgressBar, 10, SpringLayout.SOUTH, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.EAST, readProgressBar, -10, SpringLayout.EAST, this);
-        springLayout.putConstraint(SpringLayout.WEST, readProgressBar, 0, SpringLayout.WEST, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, readProgressLabel, 0, SpringLayout.NORTH, scanningDriveLabel);
-        springLayout.putConstraint(SpringLayout.EAST, readProgressLabel, 0, SpringLayout.EAST, readProgressBar);
-        springLayout.putConstraint(SpringLayout.NORTH, foundFilesLabel, 10, SpringLayout.SOUTH, readProgressBar);
-        springLayout.putConstraint(SpringLayout.WEST, foundFilesLabel, 0, SpringLayout.WEST, scanningDriveLabel);
+        add(Box.createVerticalStrut(10));
     }
 
     private void addProcessFeedbackUI() {
-        JLabel processRecordsLabel = new JLabel("Processing deleted records: ");
-        add(processRecordsLabel);
+        processProgressBar = new DetailedProgressBar();
+        processProgressBar.setPercentageLabelPrefix("Processing deleted records:");
+        processProgressBar.setProgressLabelSuffix("files");
         add(processProgressBar);
-
-        processProgressLabel = new JLabel("0 / 0 files");
-        add(processProgressLabel);
-        processProgressPercentLabel = new JLabel("0%");
-        add(processProgressPercentLabel);
-        processedFilesLabel = new JLabel("0 deleted files processed.");
-        add(processedFilesLabel);
-
-        springLayout.putConstraint(SpringLayout.NORTH, processRecordsLabel, 25, SpringLayout.SOUTH, foundFilesLabel);
-        springLayout.putConstraint(SpringLayout.WEST, processRecordsLabel, 10, SpringLayout.WEST, this);
-        springLayout.putConstraint(SpringLayout.NORTH, processProgressPercentLabel, 0, SpringLayout.NORTH, processRecordsLabel);
-        springLayout.putConstraint(SpringLayout.WEST, processProgressPercentLabel, 0, SpringLayout.EAST, processRecordsLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, processProgressBar, 10, SpringLayout.SOUTH, processRecordsLabel);
-        springLayout.putConstraint(SpringLayout.EAST, processProgressBar, -10, SpringLayout.EAST, this);
-        springLayout.putConstraint(SpringLayout.WEST, processProgressBar, 0, SpringLayout.WEST, processRecordsLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, processProgressLabel, 0, SpringLayout.NORTH, processRecordsLabel);
-        springLayout.putConstraint(SpringLayout.EAST, processProgressLabel, 0, SpringLayout.EAST, processProgressBar);
-        springLayout.putConstraint(SpringLayout.NORTH, processedFilesLabel, 10, SpringLayout.SOUTH, processProgressBar);
-        springLayout.putConstraint(SpringLayout.WEST, processedFilesLabel, 0, SpringLayout.WEST, processRecordsLabel);
+        add(Box.createVerticalStrut(10));
     }
 
     private void updateInterface() {
@@ -131,30 +95,13 @@ public class ScanPanel extends StepPanel {
     }
 
     private void updateReadInterface() {
-        int val = readProgressBar.getValue();
-        int max = readProgressBar.getMaximum();
-
-        readProgressLabel.setText(val + " / " + max  + " files");
-
-        double percent = (double) val/max;
-        int percentInt = (int) (percent * 100);
-        readProgressPercentLabel.setText(percentInt + "%");
-
+        readProgressBar.updateInformationLabels();
         foundFilesLabel.setText(deletedFilesFound + " deleted files found.");
     }
 
     private void updateProcessInterface() {
-        int val = deletedFilesProcessed;
-        processProgressBar.setValue(val);
-        int max = processProgressBar.getMaximum();
-
-        processProgressLabel.setText(val + " / " + max  + " files");
-
-        double percent = (double) val/max;
-        int percentInt = (int) (percent * 100);
-        processProgressPercentLabel.setText(percentInt + "%");
-
-        processedFilesLabel.setText(deletedFilesProcessed + " deleted files processed.");
+        processProgressBar.updateInformationLabels();
+        processProgressBar.setValue(deletedFilesProcessed);
     }
 
     private void scanRootForDeletedFiles() throws IOException {
@@ -224,6 +171,7 @@ public class ScanPanel extends StepPanel {
 
     private void onProcessingEnd() {
         scanTimer.stop();
+        updateProcessInterface();
         BottomPanel.setNextButtonEnabled(true);
     }
 
