@@ -4,16 +4,12 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 
 public class SelectDirectoryComponent extends JPanel {
 
     private final JLabel fileLabel = new JLabel("");
     private final JButton browseButton = new JButton("Browse");
-
-    private File selectedFile;
-    public File getSelectedFile() {
-        return selectedFile;
-    }
 
     private final MouseAdapter mouseAdapter = new MouseAdapter() {
         @Override
@@ -21,10 +17,16 @@ public class SelectDirectoryComponent extends JPanel {
             super.mouseClicked(e);
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            try {
+                fileChooser.setCurrentDirectory(new File(new File("C:\\").getCanonicalPath()));
+                fileChooser.changeToParentDirectory();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
 
             int result = fileChooser.showOpenDialog(fileLabel);
             if (result == JFileChooser.APPROVE_OPTION) {
-                selectedFile = fileChooser.getSelectedFile();
+                File selectedFile = fileChooser.getSelectedFile();
                 String filePath = selectedFile.getAbsolutePath();
                 fileLabel.setText(filePath);
                 parent.notifyOutputLocationSelected(selectedFile);
