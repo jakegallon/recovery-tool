@@ -117,39 +117,20 @@ public class ScanPanel extends StepPanel {
             throw new RuntimeException("$MFT has resident data attribute");
         }
 
-        HashMap<Long, Long> dataRunOffsetFiles = new HashMap<>();
-
-        byte[] dataAttribute = mft.getAttribute(Attribute.DATA);
-        int dataAttributeDataRunsOffset = dataAttribute[0x20];
-        byte[] dataRunBytes = Arrays.copyOfRange(dataAttribute, dataAttributeDataRunsOffset, dataAttribute.length);
-        int dataRunOffset = 0;
-        while(dataRunOffset < dataRunBytes.length) {
-            if (dataRunBytes[dataRunOffset] == 0x00) break;
-
-            int judgementByte = dataRunBytes[dataRunOffset] & 0xFF;
-            int startLength = judgementByte / 16;
-            int lengthLength = judgementByte % 16;
-
-            long lengthClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1, dataRunOffset+1+lengthLength), true);
-            long lengthFiles = lengthClusters * 4;
-            long startClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1+lengthLength, dataRunOffset+1+lengthLength+startLength), true);
-            long startBytes = startClusters*4096;
-
-            dataRunOffsetFiles.put(startBytes, lengthFiles);
-            dataRunOffset += startLength + lengthLength + 1;
-        }
+        HashMap<Long, Long> dataRunOffsetClusters = mft.getDataRunOffsetClusters();
 
         int totalFilesCounter = 0;
-        for(Map.Entry<Long, Long> dataRun : dataRunOffsetFiles.entrySet()) {
+        for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {
             totalFilesCounter += dataRun.getValue();
         }
         readProgressBar.setMaximum(totalFilesCounter);
 
         int currentFileOffset = 0;
 
-        for(Map.Entry<Long, Long> dataRun : dataRunOffsetFiles.entrySet()) {
+        for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {
             long offsetBytes = dataRun.getKey();
-            for(int i = 0; i <= dataRun.getValue(); i++) {
+            long fileLength = dataRun.getValue() * 4;
+            for(int i = 0; i <= fileLength; i++) {
                 readProgressBar.setValue(currentFileOffset + i);
 
                 byte[] mftRecordBytes = Utility.readMFTRecord(diskChannel, offsetBytes);
@@ -163,7 +144,7 @@ public class ScanPanel extends StepPanel {
                 }
                 offsetBytes += mftRecordLength;
             }
-            currentFileOffset += dataRun.getValue();
+            currentFileOffset += fileLength;
         }
         diskAccess.close();
         isReading = false;

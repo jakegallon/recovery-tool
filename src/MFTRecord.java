@@ -178,4 +178,41 @@ public class MFTRecord {
         long fileTimeUnix = (fileTimeRaw + WINDOWS_TO_UNIX_EPOCH) / 10000L;
         return DATE_FORMAT.format(fileTimeUnix);
     }
+
+    private HashMap<Long, Long> dataRunOffsetClusters;
+
+    public HashMap<Long, Long> getDataRunOffsetClusters() {
+        if(dataRunOffsetClusters == null) {
+            parseDataRuns();
+        }
+        return dataRunOffsetClusters;
+    }
+
+    private void parseDataRuns() {
+        dataRunOffsetClusters = new HashMap<>();
+
+        byte[] dataAttribute;
+        try {
+            dataAttribute = getAttribute(Attribute.DATA);
+        } catch (RuntimeException e) {
+            return; //todo handle
+        }
+        int dataAttributeDataRunsOffset = dataAttribute[0x20];
+        byte[] dataRunBytes = Arrays.copyOfRange(dataAttribute, dataAttributeDataRunsOffset, dataAttribute.length);
+        int dataRunOffset = 0;
+        while(dataRunOffset < dataRunBytes.length) {
+            if (dataRunBytes[dataRunOffset] == 0x00) break;
+
+            int judgementByte = dataRunBytes[dataRunOffset] & 0xFF;
+            int startLength = judgementByte / 16;
+            int lengthLength = judgementByte % 16;
+
+            long lengthClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1, dataRunOffset+1+lengthLength), true);
+            long startClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1+lengthLength, dataRunOffset+1+lengthLength+startLength), true);
+            long startBytes = startClusters*4096;
+
+            dataRunOffsetClusters.put(startBytes, lengthClusters);
+            dataRunOffset += startLength + lengthLength + 1;
+        }
+    }
 }
