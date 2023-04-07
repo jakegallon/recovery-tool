@@ -95,9 +95,21 @@ public class PartitionSelectionComponent extends JPanel {
 
     private void displaySelectedPartitionInformation() throws IOException {
         informationPanel.removeAll();
-
         FileStore fs = selectedPartitionWidget.getFileStore();
 
+        displayGenericInformation(fs);
+
+        if(fs.type().equals("NTFS")) {
+            displayNtfsInformation();
+        } else if (fs.type().equals("FAT32")) {
+            displayFat32Information();
+        }
+
+        informationPanel.repaint();
+        informationPanel.revalidate();
+    }
+
+    private void displayGenericInformation(FileStore fs) throws IOException {
         long totalSpace = fs.getTotalSpace();
         long unallocatedSpace = fs.getUnallocatedSpace();
         long usedSpace = totalSpace - unallocatedSpace;
@@ -119,13 +131,6 @@ public class PartitionSelectionComponent extends JPanel {
         String convertedUnallocatedSpace = df.format((double) unallocatedSpace / storageUnitSize);
         JLabel unallocatedSize = new JLabel("Unallocated Space: " + convertedUnallocatedSpace + storageUnit + " (" + unallocatedSpace + " B)");
         informationPanel.add(unallocatedSize);
-
-        if(fs.type().equals("NTFS")) {
-            displayNtfsInformation();
-        }
-
-        informationPanel.repaint();
-        informationPanel.revalidate();
     }
 
     private void displayNtfsInformation() {
@@ -142,6 +147,31 @@ public class PartitionSelectionComponent extends JPanel {
 
         JLabel totalSectorsLabel = new JLabel("Total Sectors: " + ntfsInformation.getTotalSectors());
         informationPanel.add(totalSectorsLabel);
+    }
+
+    private void displayFat32Information() {
+        FAT32Information fat32Information = FAT32Information.createInstance(selectedPartitionWidget.getRoot());
+
+        JPanel fat32Separator = createNamedSeparator("FAT32 Information");
+        informationPanel.add(fat32Separator);
+
+        JLabel bytesPerSectorLabel = new JLabel("Bytes per Sector: " + fat32Information.bytesPerSector);
+        informationPanel.add(bytesPerSectorLabel);
+
+        JLabel sectorsPerClusterLabel = new JLabel("Sectors per Cluster: " + fat32Information.sectorsPerCluster);
+        informationPanel.add(sectorsPerClusterLabel);
+
+        JLabel sectorsPerFatLabel = new JLabel("Sectors per FAT: " + fat32Information.sectorsPerFat);
+        informationPanel.add(sectorsPerFatLabel);
+
+        JLabel fatCountLabel = new JLabel("FAT count: " + fat32Information.fatCount);
+        informationPanel.add(fatCountLabel);
+
+        JLabel reservedSectorsLabel = new JLabel("Reserved Sectors: " + fat32Information.reservedSectors);
+        informationPanel.add(reservedSectorsLabel);
+
+        JLabel dataStartSectorLabel = new JLabel("Data Start Sector: " + fat32Information.dataStartSector);
+        informationPanel.add(dataStartSectorLabel);
     }
 
     private JPanel createNamedSeparator(String name) {
