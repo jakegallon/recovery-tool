@@ -10,6 +10,10 @@ public class DetailedProgressBar extends JPanel {
     private final JLabel progressLabel = new JLabel("0 / 0");
     private final JLabel progressLabelSuffix = new JLabel("");
 
+    public int getMaximum() {
+        return progressBar.getMaximum();
+    }
+
     public void setMaximum(int i){
         progressBar.setMaximum(i);
     }

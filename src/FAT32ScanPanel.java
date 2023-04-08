@@ -54,6 +54,7 @@ public class FAT32ScanPanel extends ScanPanel{
         while(!directoryStartClusters.isEmpty()) {
             readDirectory(directoryStartClusters.get(0));
         }
+        isReading = false;
     }
 
     private static final long MAX_CLUSTER_VALUE = 0x0FFFFFEF;
@@ -98,6 +99,13 @@ public class FAT32ScanPanel extends ScanPanel{
         }
     }
 
+    private static int totalFilesFound = 0;
+    private static void incrementTotalFilesFound() {
+        totalFilesFound ++;
+        readProgressBar.setMaximum(totalFilesFound);
+        readProgressBar.setValue(readProgressBar.getMaximum());
+    }
+
     private static void readDirectoryCluster(byte[] cluster) throws IOException {
         StringBuilder accumulatedName = new StringBuilder();
 
@@ -114,6 +122,7 @@ public class FAT32ScanPanel extends ScanPanel{
                 byte[] startClusterBytes = new byte[]{thisRecord[0x15], thisRecord[0x14], thisRecord[0x1B], thisRecord[0x1A]};
                 int startCluster = Utility.byteArrayToUnsignedInt(startClusterBytes, false);
                 if(!checkedDirectoryStartClusters.contains(startCluster)) {
+                    incrementTotalFilesFound();
                     directoryStartClusters.add(startCluster);
                     checkedDirectoryStartClusters.add(startCluster);
                 }
@@ -127,6 +136,8 @@ public class FAT32ScanPanel extends ScanPanel{
                 }
                 accumulatedName.insert(0, thisRecordNameExtension);
             } else {
+                incrementTotalFilesFound();
+                deletedFilesFound++;
                 if(!accumulatedName.toString().equals("")) {
                     FAT32Record fat32Record = new FAT32Record(thisRecord, accumulatedName.toString());
                     deletedRecords.add(fat32Record);
