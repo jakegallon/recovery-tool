@@ -20,7 +20,8 @@ public class PartitionPanel extends StepPanel {
             NTFSScanPanel scanPanel = new NTFSScanPanel();
             Frame.setStepPanel(scanPanel);
         } else if (partitionType.equals("FAT32")) {
-            //stub
+            FAT32ScanPanel scanPanel = new FAT32ScanPanel();
+            Frame.setStepPanel(scanPanel);
         }
     }
 

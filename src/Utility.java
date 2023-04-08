@@ -69,4 +69,15 @@ public class Utility {
         }
         return mftRecord;
     }
+
+    public static byte[] readCluster(FileChannel diskChannel, long clusterOffset) throws IOException {
+        FAT32Information fat32Information = FAT32Information.getInstance();
+        byte[] fat32Record = new byte[fat32Information.sectorsPerCluster * fat32Information.bytesPerSector];
+        ByteBuffer buffer = ByteBuffer.wrap(fat32Record);
+
+        diskChannel.position(clusterOffset);
+        diskChannel.read(buffer);
+
+        return fat32Record;
+    }
 }

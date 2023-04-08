@@ -39,4 +39,8 @@ public class FAT32Information {
 
         dataStartSector = (reservedSectors+(fatCount * sectorsPerFat));
     }
+
+    public File getRoot() {
+        return root;
+    }
 }
