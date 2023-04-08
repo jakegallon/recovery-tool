@@ -27,6 +27,8 @@ public class FAT32Information {
     int sectorsPerFat;
     int dataStartSector;
 
+    int rootDirectoryStartCluster;
+
     private void readBootSector(){
         byte[] bootSector = Utility.readBootSector(root);
 
@@ -38,6 +40,8 @@ public class FAT32Information {
         sectorsPerFat = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x24, 0x28), true);
 
         dataStartSector = (reservedSectors+(fatCount * sectorsPerFat));
+
+        rootDirectoryStartCluster = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x2C, 0x30), true);
     }
 
     public File getRoot() {

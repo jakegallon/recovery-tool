@@ -7,7 +7,8 @@ import java.util.Arrays;
 
 public class FAT32ScanPanel extends ScanPanel{
 
-    private static final ArrayList<Long> directoryStartClusters = new ArrayList<>();
+    private static final ArrayList<Integer> directoryStartClusters = new ArrayList<>();
+    private static final ArrayList<Integer> checkedDirectoryStartClusters = new ArrayList<>();
     private static int recordsInCluster;
     private static File root;
 
@@ -32,33 +33,83 @@ public class FAT32ScanPanel extends ScanPanel{
     };
 
     private static final int[] LONG_NAME_CHAR_OFFSETS = new int[]{0x01, 0x03, 0x05, 0x07, 0x09, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1C, 0x1E};
+    private static int fatByteOffset;
+    private static int bytesPerCluster;
+    private static int dataOffsetBytes;
 
     private static void scanRootForDeletedFiles() throws IOException {
         FAT32Information fat32Information = FAT32Information.getInstance();
-        int firstClusterOffset = fat32Information.dataStartSector / fat32Information.sectorsPerCluster;
-        readDirectoryCluster(firstClusterOffset);
+
+        fatByteOffset = fat32Information.reservedSectors * fat32Information.bytesPerSector;
+        bytesPerCluster = fat32Information.bytesPerSector * fat32Information.sectorsPerCluster;
+        dataOffsetBytes = fat32Information.bytesPerSector * fat32Information.dataStartSector;
+
+        int rootDirectoryStartCluster = fat32Information.rootDirectoryStartCluster;
+        directoryStartClusters.add(rootDirectoryStartCluster);
+
+        while(!directoryStartClusters.isEmpty()) {
+            readDirectory(directoryStartClusters.get(0));
+        }
     }
 
-    private static void readDirectoryCluster(long directoryOffsetClusters) throws IOException {
-        int internalEntryOffset = 0;
-        long directoryOffsetBytes = directoryOffsetClusters * recordsInCluster * 32;
+    private static final long MAX_CLUSTER_VALUE = 0x0FFFFFEF;
+
+    private static void readDirectory(int directoryStartCluster) throws IOException {
+        ArrayList<Integer> thisDirectoriesStartClusters = new ArrayList<>();
 
         RandomAccessFile diskAccess = new RandomAccessFile(root, "r");
         FileChannel diskChannel = diskAccess.getChannel();
+        int nextCluster = directoryStartCluster;
 
-        byte[] thisCluster = Utility.readCluster(diskChannel, directoryOffsetBytes + internalEntryOffset);
+        while(nextCluster <= MAX_CLUSTER_VALUE) {
+            thisDirectoriesStartClusters.add(nextCluster);
 
+            int internalFatByteOffset = nextCluster * 4;
+            long fatClusterTarget = internalFatByteOffset / bytesPerCluster;
+            internalFatByteOffset -= fatClusterTarget * bytesPerCluster;
+
+            byte[] thisCluster = Utility.readCluster(diskChannel, fatByteOffset + (fatClusterTarget * bytesPerCluster));
+            nextCluster = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(thisCluster, internalFatByteOffset, internalFatByteOffset + 4), true);
+        }
+
+        byte[][] thisDirectoriesData = new byte[thisDirectoriesStartClusters.size()][bytesPerCluster];
+
+        for(int i = 0; i < thisDirectoriesStartClusters.size(); i++) {
+            byte[] thisCluster = Utility.readCluster(diskChannel, dataOffsetBytes + (long) (thisDirectoriesStartClusters.get(i) - 2) * bytesPerCluster);
+            thisDirectoriesData[i] = thisCluster;
+        }
+        diskAccess.close();
+
+        parseDirectory(thisDirectoriesData);
+        directoryStartClusters.remove(0);
+    }
+
+    private static void parseDirectory(byte[][] thisDirectoriesData) {
+        for(byte[] cluster : thisDirectoriesData) {
+            try {
+                readDirectoryCluster(cluster);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static void readDirectoryCluster(byte[] cluster) throws IOException {
         StringBuilder accumulatedName = new StringBuilder();
 
+        int internalEntryOffset = 0;
         for(int x = 0; x < recordsInCluster; x++) {
-            byte[] thisRecord = Arrays.copyOfRange(thisCluster, internalEntryOffset, internalEntryOffset+32);
+            byte[] thisRecord = Arrays.copyOfRange(cluster, internalEntryOffset, internalEntryOffset+32);
 
             byte attribute = thisRecord[0x0B];
 
             if((attribute & 0x10) == 0x10) {
                 byte[] startClusterBytes = new byte[]{thisRecord[0x15], thisRecord[0x14], thisRecord[0x1B], thisRecord[0x1A]};
-                long startCluster = Utility.byteArrayToUnsignedLong(startClusterBytes, false);
-                directoryStartClusters.add(startCluster);
+                int startCluster = Utility.byteArrayToUnsignedInt(startClusterBytes, false);
+                if(!checkedDirectoryStartClusters.contains(startCluster)) {
+                    directoryStartClusters.add(startCluster);
+                    checkedDirectoryStartClusters.add(startCluster);
+                }
                 accumulatedName = new StringBuilder();
             } else if(attribute == 0x0F) {
                 StringBuilder thisRecordNameExtension = new StringBuilder();
@@ -81,7 +132,5 @@ public class FAT32ScanPanel extends ScanPanel{
             }
             internalEntryOffset += 32;
         }
-        diskAccess.close();
-        directoryStartClusters.remove(directoryOffsetClusters);
     }
 }
