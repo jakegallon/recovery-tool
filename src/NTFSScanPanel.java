@@ -6,7 +6,7 @@ import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class ScanPanel extends StepPanel {
+public class NTFSScanPanel extends StepPanel {
 
     @Override
     public void onNextStep() {
@@ -51,7 +51,7 @@ public class ScanPanel extends StepPanel {
         }
     }
 
-    public ScanPanel() {
+    public NTFSScanPanel() {
         Thread readThread = new Thread(this::readDrive);
         readThread.start();
 

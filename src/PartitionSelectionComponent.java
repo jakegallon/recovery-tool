@@ -85,7 +85,7 @@ public class PartitionSelectionComponent extends JPanel {
     }
 
     private void onNewSelectedPartition() {
-        parent.notifyPartitionSelected(selectedPartitionWidget.getRoot());
+        parent.notifyPartitionSelected(selectedPartitionWidget.getRoot(), selectedPartitionWidget.getFileStore().type());
         try {
             displaySelectedPartitionInformation();
         } catch (IOException e) {

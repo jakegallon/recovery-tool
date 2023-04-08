@@ -9,14 +9,19 @@ public class PartitionPanel extends StepPanel {
     private boolean hasOutputLocationSelected = false;
 
     private int errorMessagePanelIndex = 0;
+    private String partitionType = "";
 
     @Override
     public void onNextStep() {
-        ScanPanel scanPanel = new ScanPanel();
-        Frame.setStepPanel(scanPanel);
-
         BottomPanel.setNextButtonEnabled(false);
         BottomPanel.setBackButtonEnabled(true);
+
+        if(partitionType.equals("NTFS")) {
+            NTFSScanPanel scanPanel = new NTFSScanPanel();
+            Frame.setStepPanel(scanPanel);
+        } else if (partitionType.equals("FAT32")) {
+            //stub
+        }
     }
 
     @Override
@@ -56,8 +61,9 @@ public class PartitionPanel extends StepPanel {
     }
 
     private File partition;
-    public void notifyPartitionSelected(File f) {
+    public void notifyPartitionSelected(File f, String partitionType) {
         partition = f;
+        this.partitionType = partitionType;
         hasPartitionSelected = true;
         checkNextStepAllowed();
     }
@@ -104,7 +110,7 @@ public class PartitionPanel extends StepPanel {
             JLabel exclamationMark = new JLabel("!");
             exclamationMark.setForeground(Color.RED);
 
-            JLabel errorMessage = new JLabel("<html>The output location cannot be on the same partition that you are recovering files from.<br>This is because recovering files can may overwrite the data being used to recover files which have not been recovered yet.</html>");
+            JLabel errorMessage = new JLabel("<html>The output location cannot be on the same partition that you are recovering files from.<br>This is because recovered files will overwrite the data of files which have not yet been recovered, making them irrecoverable. Consider using a USB Flash Drive.</html>");
             errorMessage.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
             errorMessagePanel.add(Box.createHorizontalStrut(4));

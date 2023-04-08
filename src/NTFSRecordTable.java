@@ -67,7 +67,7 @@ public class NTFSRecordTable extends JTable {
     }
 
     private void populateTable() {
-        ArrayList<MFTRecord> mftRecords = ScanPanel.getDeletedRecords();
+        ArrayList<MFTRecord> mftRecords = NTFSScanPanel.getDeletedRecords();
         for(MFTRecord mftRecord : mftRecords) {
             Object[] row = {
                     mftRecord,
