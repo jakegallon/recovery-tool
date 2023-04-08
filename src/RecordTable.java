@@ -93,7 +93,7 @@ public class RecordTable extends JTable {
                 if(columnAtPoint(e.getPoint()) != column) setValueAt(!(boolean) getValueAt(visualRow, column), visualRow, column);
                 boolean isSelected = (boolean) getValueAt(visualRow, column);
 
-                MFTRecord thisRecord = (MFTRecord) tableModel.getValueAt(row, getColumnModel().getColumnIndex(MFT_RECORD_COLUMN));
+                GenericRecord thisRecord = (GenericRecord) tableModel.getValueAt(row, getColumnModel().getColumnIndex(MFT_RECORD_COLUMN));
                 if(isSelected) {
                     if(!recordsToRecover.contains(thisRecord))
                         recordsToRecover.add(thisRecord);
