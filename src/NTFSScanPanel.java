@@ -39,7 +39,7 @@ public class NTFSScanPanel extends ScanPanel {
         for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {
             totalFilesCounter += dataRun.getValue();
         }
-        readProgressBar.setMaximum(totalFilesCounter);
+        readProgressBar.setMaximum(totalFilesCounter*4);
 
         int currentFileOffset = 0;
 
