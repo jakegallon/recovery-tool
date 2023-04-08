@@ -1,9 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
@@ -39,7 +36,13 @@ public class RecoveryPanel extends StepPanel {
             add(recoveryProgressBar);
             if(deletedRecords.get(0) instanceof MFTRecord) {
                 recoverNTFSFiles();
-            }  //stub
+            } else if(deletedRecords.get(0) instanceof FAT32Record) {
+                try {
+                    recoverFAT32Files();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 
@@ -111,5 +114,56 @@ public class RecoveryPanel extends StepPanel {
             diskAccess.close();
         }
         fos.close();
+    }
+
+    private static final long MAX_CLUSTER_VALUE = 0x0FFFFFEF;
+
+    private void recoverFAT32Files() throws IOException {
+        for(GenericRecord deletedRecord : deletedRecords) {
+            FAT32Record fat32Record = (FAT32Record) deletedRecord;
+
+            FAT32Information fat32Information = FAT32Information.getInstance();
+            int bytesPerCluster = fat32Information.bytesPerSector * fat32Information.sectorsPerCluster;
+            int fatByteOffset = fat32Information.reservedSectors * fat32Information.bytesPerSector;
+            int dataOffsetBytes = fat32Information.bytesPerSector * fat32Information.dataStartSector;
+
+            ArrayList<Integer> thisDirectoriesStartClusters = new ArrayList<>();
+
+            RandomAccessFile diskAccess = new RandomAccessFile(fat32Information.getRoot(), "r");
+            FileChannel diskChannel = diskAccess.getChannel();
+            int nextCluster = fat32Record.startCluster;
+
+            while(nextCluster <= MAX_CLUSTER_VALUE) {
+                thisDirectoriesStartClusters.add(nextCluster);
+
+                int internalFatByteOffset = nextCluster * 4;
+                long fatClusterTarget = internalFatByteOffset / bytesPerCluster;
+                internalFatByteOffset -= fatClusterTarget * bytesPerCluster;
+
+                byte[] thisCluster = Utility.readCluster(diskChannel, fatByteOffset + (fatClusterTarget * bytesPerCluster));
+                nextCluster = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(thisCluster, internalFatByteOffset, internalFatByteOffset + 4), true);
+            }
+
+            byte[][] thisDirectoriesData = new byte[thisDirectoriesStartClusters.size()][bytesPerCluster];
+
+            for(int i = 0; i < thisDirectoriesStartClusters.size(); i++) {
+                byte[] thisCluster = Utility.readCluster(diskChannel, dataOffsetBytes + (long) (thisDirectoriesStartClusters.get(i) - 2) * bytesPerCluster);
+                thisDirectoriesData[i] = thisCluster;
+            }
+            diskAccess.close();
+
+            String fileName = fat32Record.getFileName();
+
+            File newFile = new File(outputDirectory, fileName);
+            FileOutputStream fos = new FileOutputStream(newFile);
+            for(byte[] cluster : thisDirectoriesData) {
+                try {
+                    fos.write(cluster);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            fos.close();
+        }
     }
 }
