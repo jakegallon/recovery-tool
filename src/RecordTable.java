@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import javafx.util.Pair;
 
-public class NTFSRecordTable extends JTable {
+public class RecordTable extends JTable {
 
     private final static String MFT_RECORD_COLUMN = "MFT Record";
     private final static String IS_SELECTED_COLUMN = " ";
@@ -17,12 +17,12 @@ public class NTFSRecordTable extends JTable {
     private final DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
     private final TableRowSorter<DefaultTableModel> tableSorter = new TableRowSorter<>(tableModel);
 
-    private final ArrayList<MFTRecord> recordsToRecover = new ArrayList<>();
-    public ArrayList<MFTRecord> getRecordsToRecover() {
+    private final ArrayList<GenericRecord> recordsToRecover = new ArrayList<>();
+    public ArrayList<GenericRecord> getRecordsToRecover() {
         return recordsToRecover;
     }
 
-    public NTFSRecordTable() {
+    public RecordTable() {
         setModel(tableModel);
 
         setTableRules();
@@ -67,16 +67,16 @@ public class NTFSRecordTable extends JTable {
     }
 
     private void populateTable() {
-        ArrayList<MFTRecord> mftRecords = NTFSScanPanel.getDeletedRecords();
-        for(MFTRecord mftRecord : mftRecords) {
+        ArrayList<GenericRecord> deletedRecords = NTFSScanPanel.getDeletedRecords();
+        for(GenericRecord deletedRecord : deletedRecords) {
             Object[] row = {
-                    mftRecord,
+                    deletedRecord,
                     false,
-                    mftRecord.getFileName(),
-                    mftRecord.getFileExtension(),
-                    mftRecord.getFileSizeBytes(),
-                    mftRecord.getCreationTime(),
-                    mftRecord.getModifiedTime()
+                    deletedRecord.getFileName(),
+                    deletedRecord.getFileExtension(),
+                    deletedRecord.getFileSizeBytes(),
+                    deletedRecord.getCreationTime(),
+                    deletedRecord.getModifiedTime()
             };
             tableModel.addRow(row);
         }

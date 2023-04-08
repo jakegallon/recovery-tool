@@ -24,37 +24,41 @@ public class RecoveryPanel extends StepPanel {
 
     }
 
-    private final ArrayList<MFTRecord> mftRecords;
-    public RecoveryPanel(ArrayList<MFTRecord> mftRecords) {
-        this.mftRecords = mftRecords;
+    private final ArrayList<GenericRecord> deletedRecords;
+    public RecoveryPanel(ArrayList<GenericRecord> deletedRecords) {
+        this.deletedRecords = deletedRecords;
         outputDirectory = PartitionPanel.getOutput();
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        initializeRecoveryProgressBar();
-        add(recoveryProgressBar);
-
-        recoverFiles();
+        if(deletedRecords.isEmpty()) {
+            //stub
+        } else {
+            initializeRecoveryProgressBar();
+            add(recoveryProgressBar);
+            if(deletedRecords.get(0) instanceof MFTRecord) {
+                recoverNTFSFiles();
+            }  //stub
+        }
     }
 
     private void initializeRecoveryProgressBar() {
         recoveryProgressBar.setPercentageLabelPrefix("Recovering Deleted Files:");
         recoveryProgressBar.setProgressLabelSuffix("files");
-        recoveryProgressBar.setMaximum(mftRecords.size());
+        recoveryProgressBar.setMaximum(deletedRecords.size());
         recoveryProgressBar.updateInformationLabels();
     }
 
-    private void recoverFiles() {
-        for(MFTRecord mftRecord : mftRecords) {
+    private void recoverNTFSFiles() {
+        for(GenericRecord deletedRecord : deletedRecords) {
+            MFTRecord mftRecord = (MFTRecord) deletedRecord;
             try {
                 mftRecord.parseDataAttribute();
                 if (mftRecord.isDataResident()) {
                     recoverResidentFile(mftRecord);
-
                 } else {
                     recoverNonResidentFile(mftRecord);
-
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

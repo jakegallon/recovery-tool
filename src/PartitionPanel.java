@@ -5,7 +5,7 @@ import java.io.File;
 
 public class PartitionPanel extends StepPanel {
 
-    private static boolean hasPartitionSelected = false;
+    private boolean hasPartitionSelected = false;
     private boolean hasOutputLocationSelected = false;
 
     private int errorMessagePanelIndex = 0;

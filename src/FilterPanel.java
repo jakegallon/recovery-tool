@@ -42,7 +42,7 @@ public class FilterPanel extends StepPanel {
     private JCheckBox hideEmptyFilesCheckbox;
     private JCheckBox hideEmptyExtensionsCheckbox;
 
-    private final NTFSRecordTable recordTable;
+    private final RecordTable recordTable;
     private final JLabel tableInformation = new JLabel();
 
     List<RowFilter<Object, Object>> filters = new ArrayList<>();
@@ -60,7 +60,7 @@ public class FilterPanel extends StepPanel {
         content.add(filterPanel, BorderLayout.PAGE_START);
 
         JPanel tableHolder = new JPanel(new BorderLayout());
-        recordTable = new NTFSRecordTable();
+        recordTable = new RecordTable();
         tableHolder.add(new JScrollPane(recordTable), BorderLayout.CENTER);
         tableHolder.add(tableInformation, BorderLayout.PAGE_END);
         content.add(tableHolder, BorderLayout.CENTER);
