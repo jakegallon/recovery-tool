@@ -137,16 +137,18 @@ public class FAT32ScanPanel extends ScanPanel{
                 accumulatedName.insert(0, thisRecordNameExtension);
             } else {
                 incrementTotalFilesFound();
-                deletedFilesFound++;
-                if(!accumulatedName.toString().equals("")) {
-                    FAT32Record fat32Record = new FAT32Record(thisRecord, accumulatedName.toString());
-                    deletedRecords.add(fat32Record);
-                    addRecordToUpdateQueue(fat32Record);
-                    accumulatedName = new StringBuilder();
-                } else {
-                    FAT32Record fat32Record = new FAT32Record(thisRecord);
-                    deletedRecords.add(fat32Record);
-                    addRecordToUpdateQueue(fat32Record);
+                if(thisRecord[0] == (byte)0xE5) {
+                    deletedFilesFound++;
+                    if(!accumulatedName.toString().equals("")) {
+                        FAT32Record fat32Record = new FAT32Record(thisRecord, accumulatedName.toString());
+                        deletedRecords.add(fat32Record);
+                        addRecordToUpdateQueue(fat32Record);
+                        accumulatedName = new StringBuilder();
+                    } else {
+                        FAT32Record fat32Record = new FAT32Record(thisRecord);
+                        deletedRecords.add(fat32Record);
+                        addRecordToUpdateQueue(fat32Record);
+                    }
                 }
             }
             internalEntryOffset += 32;
