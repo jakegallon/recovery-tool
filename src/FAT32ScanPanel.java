@@ -37,12 +37,16 @@ public class FAT32ScanPanel extends ScanPanel{
     private static int bytesPerCluster;
     private static int dataOffsetBytes;
 
+    private static final byte[] EMPTY_RECORD = new byte[32];
+
     private static void scanRootForDeletedFiles() throws IOException {
         FAT32Information fat32Information = FAT32Information.getInstance();
 
         fatByteOffset = fat32Information.reservedSectors * fat32Information.bytesPerSector;
         bytesPerCluster = fat32Information.bytesPerSector * fat32Information.sectorsPerCluster;
         dataOffsetBytes = fat32Information.bytesPerSector * fat32Information.dataStartSector;
+
+        Arrays.fill(EMPTY_RECORD, (byte)0);
 
         int rootDirectoryStartCluster = fat32Information.rootDirectoryStartCluster;
         directoryStartClusters.add(rootDirectoryStartCluster);
@@ -100,6 +104,9 @@ public class FAT32ScanPanel extends ScanPanel{
         int internalEntryOffset = 0;
         for(int x = 0; x < recordsInCluster; x++) {
             byte[] thisRecord = Arrays.copyOfRange(cluster, internalEntryOffset, internalEntryOffset+32);
+            if(Arrays.equals(thisRecord, EMPTY_RECORD)) {
+                continue;
+            }
 
             byte attribute = thisRecord[0x0B];
 
@@ -123,11 +130,12 @@ public class FAT32ScanPanel extends ScanPanel{
                 if(!accumulatedName.toString().equals("")) {
                     FAT32Record fat32Record = new FAT32Record(thisRecord, accumulatedName.toString());
                     deletedRecords.add(fat32Record);
-                    System.out.println(accumulatedName);
+                    addRecordToUpdateQueue(fat32Record);
                     accumulatedName = new StringBuilder();
                 } else {
                     FAT32Record fat32Record = new FAT32Record(thisRecord);
                     deletedRecords.add(fat32Record);
+                    addRecordToUpdateQueue(fat32Record);
                 }
             }
             internalEntryOffset += 32;

@@ -12,7 +12,7 @@ public class ScanPanel extends StepPanel {
     protected static int deletedFilesFound = 0;
 
     protected static volatile boolean isProcessing = false;
-    protected static DetailedProgressBar processProgressBar;
+    protected static DetailedProgressBar processProgressBar = new DetailedProgressBar();
     protected static int deletedFilesProcessed = 0;
 
     private final Timer scanTimer;
@@ -90,7 +90,6 @@ public class ScanPanel extends StepPanel {
     }
 
     private void addProcessFeedbackUI() {
-        processProgressBar = new DetailedProgressBar();
         processProgressBar.setPercentageLabelPrefix("Processing deleted records:");
         processProgressBar.setProgressLabelSuffix("files");
         add(processProgressBar);
