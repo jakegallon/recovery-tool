@@ -36,6 +36,28 @@ public class PartitionPanel extends StepPanel {
         Font headerFont = new Font("Arial", Font.BOLD, 17);
         Font textFont = new Font("Arial", Font.PLAIN, 14);
 
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
+
+        ImageIcon icon = new ImageIcon("src/res/icon.png");
+        Image image = icon.getImage().getScaledInstance(64, 64, Image.SCALE_SMOOTH);
+        icon = new ImageIcon(image);
+        JLabel iconLabel = new JLabel(icon);
+
+        JLabel titleLabel = new JLabel("RecoveryTool");
+        titleLabel.setFont(new Font("Arial", Font.PLAIN, 32));
+
+        titlePanel.add(Box.createHorizontalGlue());
+        titlePanel.add(iconLabel);
+        titlePanel.add(Box.createHorizontalStrut(10));
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createHorizontalGlue());
+        titleLabel.setAlignmentY(0.1f);
+        titlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(titlePanel);
+
+        add(Box.createVerticalStrut(20));
+
         JLabel introductoryInformationHeader = new JLabel("Introductory Information");
         introductoryInformationHeader.setFont(headerFont);
         introductoryInformationHeader.setAlignmentX(Component.LEFT_ALIGNMENT);

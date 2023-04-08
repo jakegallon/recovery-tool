@@ -61,7 +61,8 @@ public class Frame extends JFrame {
         JMenuBar menuBar = new JMenuBar();
 
         JMenu helpMenu = new JMenu();
-        helpMenu.setText("Help");
+        helpMenu.setText("?");
+        helpMenu.setFont(new Font("Arial", Font.PLAIN, 16));
 
         JMenuItem helpMenuGithub = new JMenuItem();
         helpMenuGithub.setText("View on GitHub");
