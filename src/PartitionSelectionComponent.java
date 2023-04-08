@@ -93,6 +93,7 @@ public class PartitionSelectionComponent extends JPanel {
         }
     }
 
+    private JPanel errorMessagePanel;
     private void displaySelectedPartitionInformation() throws IOException {
         informationPanel.removeAll();
         FileStore fs = selectedPartitionWidget.getFileStore();
@@ -100,13 +101,50 @@ public class PartitionSelectionComponent extends JPanel {
         displayGenericInformation(fs);
 
         if(fs.type().equals("NTFS")) {
+            if(errorMessagePanel != null) {
+                remove(errorMessagePanel);
+                errorMessagePanel = null;
+            }
             displayNtfsInformation();
         } else if (fs.type().equals("FAT32")) {
+            if(errorMessagePanel != null) {
+                remove(errorMessagePanel);
+                errorMessagePanel = null;
+            }
             displayFat32Information();
+        } else {
+            displayErrorMessage(fs.type());
         }
 
-        informationPanel.repaint();
-        informationPanel.revalidate();
+        repaint();
+        revalidate();
+    }
+
+    private void displayErrorMessage(String type) {
+        errorMessagePanel = new JPanel();
+        errorMessagePanel.setBorder(new LineBorder(Color.red, 1));
+        BoxLayout boxLayout = new BoxLayout(errorMessagePanel, BoxLayout.X_AXIS);
+        errorMessagePanel.setLayout(boxLayout);
+
+        JLabel exclamationMark = new JLabel("!");
+        exclamationMark.setForeground(Color.RED);
+
+        JLabel errorMessage = new JLabel("<html>The selected drive's file system, " + type + ", is not currently supported by this tool.</html>");
+        errorMessage.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+
+        errorMessagePanel.add(Box.createHorizontalStrut(4));
+        errorMessagePanel.add(exclamationMark);
+        errorMessagePanel.add(Box.createHorizontalStrut(4));
+        errorMessagePanel.add(errorMessage);
+        errorMessagePanel.add(Box.createHorizontalStrut(4));
+
+        springLayout.putConstraint(SpringLayout.NORTH, errorMessagePanel, 10, SpringLayout.SOUTH, partitionScrollPane);
+        springLayout.putConstraint(SpringLayout.SOUTH, errorMessagePanel, 0, SpringLayout.SOUTH, informationPanel);
+        springLayout.putConstraint(SpringLayout.WEST, errorMessagePanel, 0, SpringLayout.WEST, partitionScrollPane);
+        springLayout.putConstraint(SpringLayout.EAST, errorMessagePanel, 0, SpringLayout.EAST, partitionScrollPane);
+        exclamationMark.setFont(new Font(Font.SANS_SERIF, Font.BOLD,  48));
+
+        add(errorMessagePanel);
     }
 
     private void displayGenericInformation(FileStore fs) throws IOException {
