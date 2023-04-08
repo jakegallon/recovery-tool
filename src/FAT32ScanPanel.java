@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
@@ -6,7 +7,9 @@ import java.util.Arrays;
 
 public class FAT32ScanPanel extends ScanPanel{
 
-    private static ArrayList<Long> directoryStartClusters = new ArrayList<>();
+    private static final ArrayList<Long> directoryStartClusters = new ArrayList<>();
+    private static int recordsInCluster;
+    private static File root;
 
     protected FAT32ScanPanel() {
         super(FAT32Scanner);
@@ -18,27 +21,32 @@ public class FAT32ScanPanel extends ScanPanel{
     private static final Runnable FAT32Scanner = () -> {
         isReading = true;
         try {
+            FAT32Information fat32Information = FAT32Information.getInstance();
+            recordsInCluster = (fat32Information.sectorsPerCluster * fat32Information.bytesPerSector) / 32;
+            root = fat32Information.getRoot();
+
             scanRootForDeletedFiles();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     };
 
-    private static final int ENTRY_SIZE = 32;
     private static final int[] LONG_NAME_CHAR_OFFSETS = new int[]{0x01, 0x03, 0x05, 0x07, 0x09, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1C, 0x1E};
 
     private static void scanRootForDeletedFiles() throws IOException {
         FAT32Information fat32Information = FAT32Information.getInstance();
-        int rootDirectoryOffset = fat32Information.dataStartSector * fat32Information.bytesPerSector;
+        int firstClusterOffset = fat32Information.dataStartSector / fat32Information.sectorsPerCluster;
+        readDirectoryCluster(firstClusterOffset);
+    }
 
-        int currentOffset = rootDirectoryOffset;
+    private static void readDirectoryCluster(long directoryOffsetClusters) throws IOException {
         int internalEntryOffset = 0;
+        long directoryOffsetBytes = directoryOffsetClusters * recordsInCluster * 32;
 
-        RandomAccessFile diskAccess = new RandomAccessFile(fat32Information.getRoot(), "r");
+        RandomAccessFile diskAccess = new RandomAccessFile(root, "r");
         FileChannel diskChannel = diskAccess.getChannel();
 
-        byte[] thisCluster = Utility.readCluster(diskChannel, currentOffset + internalEntryOffset);
-        int recordsInCluster = (fat32Information.sectorsPerCluster * fat32Information.bytesPerSector) / 32;
+        byte[] thisCluster = Utility.readCluster(diskChannel, directoryOffsetBytes + internalEntryOffset);
 
         StringBuilder accumulatedName = new StringBuilder();
 
@@ -64,6 +72,7 @@ public class FAT32ScanPanel extends ScanPanel{
                 if(!accumulatedName.toString().equals("")) {
                     FAT32Record fat32Record = new FAT32Record(thisRecord, accumulatedName.toString());
                     deletedRecords.add(fat32Record);
+                    System.out.println(accumulatedName);
                     accumulatedName = new StringBuilder();
                 } else {
                     FAT32Record fat32Record = new FAT32Record(thisRecord);
@@ -73,5 +82,6 @@ public class FAT32ScanPanel extends ScanPanel{
             internalEntryOffset += 32;
         }
         diskAccess.close();
+        directoryStartClusters.remove(directoryOffsetClusters);
     }
 }
