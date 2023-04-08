@@ -2,7 +2,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class MFTRecord {
+public class MFTRecord extends GenericRecord {
 
     private static final byte[] checksum = new byte[]{0x46, 0x49, 0x4C, 0x45};
 
@@ -86,10 +86,6 @@ public class MFTRecord {
         throw new IllegalArgumentException("Invalid attribute ID: " + id);
     }
 
-    private String fileName;
-    public String getFileName() {
-        return fileName;
-    }
 
     public void parseFileName() {
         if(!attributeOffsets.containsKey(Attribute.FILE_NAME)){
@@ -108,27 +104,7 @@ public class MFTRecord {
         fileName = new String(targetText, StandardCharsets.UTF_16LE);
     }
 
-    private String fileExtension = "";
-    public String getFileExtension() {
-        return fileExtension;
-    }
-
-    private String creationTime;
-    public String getCreationTime() {
-        return creationTime;
-    }
-
-    private String modifiedTime;
-    public String getModifiedTime() {
-        return modifiedTime;
-    }
-
-    private long fileSizeBytes;
-    public long getFileSizeBytes() {
-        return fileSizeBytes;
-    }
-
-    public void processAdditionalInformation() {
+    public void process() {
         try {
             parseDataAttribute();
         } catch (RuntimeException e) {
