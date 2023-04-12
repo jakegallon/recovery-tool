@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.io.File;
+import java.util.prefs.Preferences;
 
 public class PartitionPanel extends StepPanel {
 
@@ -118,6 +119,10 @@ public class PartitionPanel extends StepPanel {
     }
     public void notifyOutputLocationSelected(File f) {
         output = f;
+
+        Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
+        prefs.put("LAST_DIRECTORY", f.getAbsolutePath());
+
         hasOutputLocationSelected = true;
         checkNextStepAllowed();
     }

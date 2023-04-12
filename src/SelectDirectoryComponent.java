@@ -5,6 +5,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.prefs.Preferences;
 
 public class SelectDirectoryComponent extends JPanel {
 
@@ -67,6 +68,14 @@ public class SelectDirectoryComponent extends JPanel {
 
         add(fileLabel, BorderLayout.CENTER);
         add(browseButton, BorderLayout.EAST);
+
+        Preferences preferences = Preferences.userNodeForPackage(PartitionPanel.class);
+        String selectedFilePath = preferences.get("LAST_DIRECTORY", null);
+        if (selectedFilePath != null) {
+            File selectedFile = new File(selectedFilePath);
+            fileLabel.setText(selectedFilePath);
+            parent.notifyOutputLocationSelected(selectedFile);
+        }
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 27));
     }
