@@ -125,15 +125,17 @@ public class ScanPanel extends StepPanel {
     }
 
     private void onProcessingEnd() {
+        if(deletedRecords.isEmpty()) {
+            processLogPanel.log("No deleted records were found on this drive.", "<font size=5 color='red'>");
+            processLogPanel.log("Press \"Back\" to scan a different drive, or press \"Exit\" to exit the program.", "<font size=5 color='red'>");
+            BottomPanel.onIsFinished();
+        }
+
         scanTimer.stop();
         scanLogPanel.shutdown();
         processLogPanel.shutdown();
         updateProcessInterface();
         BottomPanel.setNextButtonEnabled(true);
-
-        if(deletedRecords.isEmpty()) {
-            BottomPanel.onIsFinished();
-        }
     }
 
     private void addReadFeedbackUI() {

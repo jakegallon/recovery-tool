@@ -41,6 +41,7 @@ public class LogPanel extends JPanel {
     public void shutdown() {
         timestampTimer.stop();
         updateTimer.stop();
+        logUpdate();
     }
 
     private void updateTimestamp() {
@@ -54,6 +55,10 @@ public class LogPanel extends JPanel {
 
     public void log(String string) {
         incomingLog.add(timestamp + string);
+    }
+
+    public void log(String string, String fontTag) {
+        incomingLog.add("<html>" + timestamp + fontTag + string + "</font></html>");
     }
 
     private void logUpdate() {
