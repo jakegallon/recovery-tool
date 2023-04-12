@@ -35,7 +35,6 @@ public class PartitionSelectionComponent extends JPanel {
         add(informationPanel);
 
         populatePartitionPanel();
-        setPreferredSize(new Dimension(0, springLayout.getConstraint(SpringLayout.SOUTH, informationPanel).getValue()));
     }
 
     private void initializePartitionPanel() {
@@ -72,6 +71,7 @@ public class PartitionSelectionComponent extends JPanel {
         springLayout.putConstraint(SpringLayout.SOUTH, informationPanel, 180, SpringLayout.NORTH, informationPanel);
         springLayout.putConstraint(SpringLayout.WEST, informationPanel, 10, SpringLayout.EAST, partitionScrollPane);
         springLayout.putConstraint(SpringLayout.EAST, informationPanel, 0, SpringLayout.EAST, this);
+        springLayout.putConstraint(SpringLayout.SOUTH, this, 0, SpringLayout.SOUTH, informationPanel);
     }
 
     private void setActiveStorageWidget(PartitionWidget partitionWidget) {

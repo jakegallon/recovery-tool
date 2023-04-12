@@ -68,6 +68,6 @@ public class SelectDirectoryComponent extends JPanel {
         add(fileLabel, BorderLayout.CENTER);
         add(browseButton, BorderLayout.EAST);
 
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, browseButton.getHeight()));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 27));
     }
 }

@@ -54,6 +54,7 @@ public class PartitionPanel extends StepPanel {
         titlePanel.add(Box.createHorizontalGlue());
         titleLabel.setAlignmentY(0.1f);
         titlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        titlePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, titlePanel.getPreferredSize().height));
         add(titlePanel);
 
         add(Box.createVerticalStrut(20));
@@ -75,7 +76,7 @@ public class PartitionPanel extends StepPanel {
         recoveryTips.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(recoveryTips);
 
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(4));
 
         JLabel outputLocationLabel = new JLabel("Step 1: Select Output Location:");
         outputLocationLabel.setFont(headerFont);
