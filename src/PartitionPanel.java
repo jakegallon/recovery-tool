@@ -14,6 +14,8 @@ public class PartitionPanel extends StepPanel {
 
     @Override
     public void onNextStep() {
+        Frame.updateTitle("Recovery Tool");
+
         BottomPanel.setNextButtonEnabled(false);
         BottomPanel.setBackButtonEnabled(true);
 
@@ -32,6 +34,8 @@ public class PartitionPanel extends StepPanel {
     }
 
     public PartitionPanel() {
+        Frame.updateTitle("");
+
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         Font headerFont = new Font("Arial", Font.BOLD, 17);

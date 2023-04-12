@@ -13,8 +13,11 @@ public class Frame extends JFrame {
     private static final JPanel stepPanelContainer = new JPanel();
     private static StepPanel activeStepPanel;
 
+    private static Frame frame;
+
     public Frame() {
         init();
+        frame = this;
 
         setStepPanel(new PartitionPanel());
     }
@@ -36,10 +39,13 @@ public class Frame extends JFrame {
         activeStepPanel.onBackStep();
     }
 
+    public static void updateTitle(String string) {
+        frame.setTitle(string);
+    }
+
     private void init() {
         addMenuBar();
 
-        setTitle("Recovery Tool");
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
