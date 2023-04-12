@@ -1,11 +1,14 @@
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class BottomPanel extends JPanel {
 
     private final static JButton nextButton = new JButton("Next");
     private final static JButton backButton = new JButton("Back");
+    private final static JButton cancelButton = new JButton("Cancel");
 
     public BottomPanel() {
         setBorder(new MatteBorder(0, 2, 2, 2, Frame.DARK_COLOR));
@@ -24,7 +27,6 @@ public class BottomPanel extends JPanel {
     }
 
     private void addCancelButton() {
-        JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> System.exit(0));
         add(cancelButton);
     }
@@ -33,6 +35,25 @@ public class BottomPanel extends JPanel {
         nextButton.addActionListener(e -> Frame.nextStep());
         nextButton.setEnabled(false);
         add(nextButton);
+    }
+
+    public static void onIsFinished() {
+        nextButton.setText("Exit");
+        nextButton.removeActionListener(nextButton.getActionListeners()[0]);
+        nextButton.addActionListener(e -> System.exit(0));
+        cancelButton.setVisible(false);
+
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                nextButton.setText("Next");
+                nextButton.removeActionListener(nextButton.getActionListeners()[0]);
+                nextButton.addActionListener(f -> Frame.nextStep());
+                cancelButton.setVisible(true);
+
+                backButton.removeActionListener(this);
+            }
+        });
     }
 
     private void addBackButton() {

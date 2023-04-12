@@ -126,12 +126,17 @@ public class ScanPanel extends StepPanel {
 
     private void onProcessingEnd() {
         scanTimer.stop();
+        scanLogPanel.shutdown();
+        processLogPanel.shutdown();
         updateProcessInterface();
         BottomPanel.setNextButtonEnabled(true);
+
+        if(deletedRecords.isEmpty()) {
+            BottomPanel.onIsFinished();
+        }
     }
 
     private void addReadFeedbackUI() {
-        readProgressBar = new DetailedProgressBar();
         readProgressBar.setProgressLabelSuffix("files");
         add(readProgressBar);
         add(Box.createVerticalStrut(10));
