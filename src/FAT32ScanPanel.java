@@ -127,6 +127,9 @@ public class FAT32ScanPanel extends ScanPanel{
                     checkedDirectoryStartClusters.add(startCluster);
                 }
                 accumulatedName = new StringBuilder();
+                if(isLogging) {
+                    scanLogPanel.log("Found directory");
+                }
             } else if(attribute == 0x0F) {
                 StringBuilder thisRecordNameExtension = new StringBuilder();
                 for(int charOffset : LONG_NAME_CHAR_OFFSETS) {
@@ -135,6 +138,9 @@ public class FAT32ScanPanel extends ScanPanel{
                     thisRecordNameExtension.append((char) thisChar);
                 }
                 accumulatedName.insert(0, thisRecordNameExtension);
+                if(isLogging) {
+                    scanLogPanel.log("Found extended name");
+                }
             } else {
                 incrementTotalFilesFound();
                 if(thisRecord[0] == (byte)0xE5) {
@@ -144,10 +150,16 @@ public class FAT32ScanPanel extends ScanPanel{
                         deletedRecords.add(fat32Record);
                         addRecordToUpdateQueue(fat32Record);
                         accumulatedName = new StringBuilder();
+                        if(isLogging) {
+                            scanLogPanel.log("Found deleted file with extended name " + fat32Record.fileName);
+                        }
                     } else {
                         FAT32Record fat32Record = new FAT32Record(thisRecord);
                         deletedRecords.add(fat32Record);
                         addRecordToUpdateQueue(fat32Record);
+                        if(isLogging) {
+                            scanLogPanel.log("Found deleted file " + fat32Record.fileName);
+                        }
                     }
                 }
             }

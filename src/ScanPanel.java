@@ -1,14 +1,16 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.prefs.Preferences;
 
 public class ScanPanel extends StepPanel {
 
     protected JLabel foundFilesLabel;
 
     protected static boolean isReading = false;
-    protected static DetailedProgressBar readProgressBar;
+    protected static DetailedProgressBar readProgressBar = new DetailedProgressBar();
     protected static int deletedFilesFound = 0;
 
     protected static volatile boolean isProcessing = false;
@@ -23,19 +25,69 @@ public class ScanPanel extends StepPanel {
         return deletedRecords;
     }
 
+    protected static boolean isLogging;
+    protected static final LogPanel scanLogPanel = new LogPanel();
+    private static final LogPanel processLogPanel = new LogPanel();
+
     protected ScanPanel(Runnable readMethod) {
+        Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
+        isLogging = prefs.getBoolean("IS_LOGGING", false);
+
         Thread readThread = new Thread(readMethod);
         readThread.start();
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(new EmptyBorder(10, 10, 10, 10));
+        Font headerFont = new Font("Arial", Font.BOLD, 17);
+        Font textFont = new Font("Arial", Font.PLAIN, 14);
+
+        add(Box.createVerticalStrut(10));
+
+        JLabel waitLabel = new JLabel("Step 3: Wait");
+        waitLabel.setFont(headerFont);
+        waitLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(waitLabel);
+
+        JLabel waitText = new JLabel("<html>The software is now scanning your drive. This may take up to a minute depending on how big the drive is. Refer to the progress bars below to track the progress of the scan.</html>");
+        waitText.setFont(textFont);
+        waitText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(waitText);
+
+        add(Box.createVerticalStrut(10));
 
         addReadFeedbackUI();
+
+        JLabel scanLogPanelLabel = new JLabel("Log:");
+        scanLogPanelLabel.setFont(textFont);
+        scanLogPanelLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(scanLogPanelLabel);
+
+        add(scanLogPanel);
+        scanLogPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        add(Box.createVerticalStrut(10));
+
         addProcessFeedbackUI();
+
+        JLabel processLogPanelLabel = new JLabel("Log:");
+        processLogPanelLabel.setFont(textFont);
+        processLogPanelLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(processLogPanelLabel);
+
+        add(processLogPanel);
+        processLogPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        add(Box.createVerticalStrut(10));
 
         scanTimer = new Timer(200, e -> updateInterface());
         scanTimer.start();
+
+        if(!isLogging) {
+            scanLogPanel.log("Logging is not currently enabled.");
+            processLogPanel.log("Logging is not currently enabled.");
+        }
     }
+
 
     @Override
     public void onNextStep() {
@@ -117,5 +169,8 @@ public class ScanPanel extends StepPanel {
     private static void process(GenericRecord genericRecord) {
         genericRecord.process();
         deletedFilesProcessed ++;
+        if(isLogging) {
+            processLogPanel.log("Successfully processed " + genericRecord.fileName);
+        }
     }
 }

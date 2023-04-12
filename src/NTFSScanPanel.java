@@ -55,7 +55,18 @@ public class NTFSScanPanel extends ScanPanel {
                     if(mftRecord.isDeleted()){
                         deletedFilesFound++;
                         deletedRecords.add(mftRecord);
+                        if(isLogging) {
+                            scanLogPanel.log("Found deleted file " + mftRecord.getFileName());
+                        }
                         addRecordToUpdateQueue(mftRecord);
+                    } else {
+                        if(isLogging) {
+                            if(!mftRecord.getFileName().equals("")) {
+                                scanLogPanel.log("Found present file " + mftRecord.getFileName());
+                            } else {
+                                scanLogPanel.log("Found nameless present file");
+                            }
+                        }
                     }
                 }
                 offsetBytes += mftRecordLength;

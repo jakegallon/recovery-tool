@@ -99,6 +99,25 @@ public class PartitionPanel extends StepPanel {
         partitionSelectionComponent.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(partitionSelectionComponent);
 
+        add(Box.createVerticalStrut(10));
+
+        JLabel settingsLabel = new JLabel("Settings");
+        settingsLabel.setFont(headerFont);
+        settingsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        settingsLabel.setAlignmentY(BOTTOM_ALIGNMENT);
+        add(settingsLabel);
+
+        JCheckBox loggingCheckbox = new JCheckBox("Logging Enabled (This will decrease speed)");
+        loggingCheckbox.setFont(textFont);
+        loggingCheckbox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        loggingCheckbox.setAlignmentY(BOTTOM_ALIGNMENT);
+        add(loggingCheckbox);
+
+        Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
+        boolean isLogging = prefs.getBoolean("IS_LOGGING", false);
+        loggingCheckbox.setSelected(isLogging);
+        loggingCheckbox.addActionListener(e -> prefs.putBoolean("IS_LOGGING", loggingCheckbox.isSelected()));
+
         for (int i = 0; i < getComponents().length; i++) {
             if(getComponents()[i] == selectDirectoryComponent)
                 errorMessagePanelIndex = i + 2;
