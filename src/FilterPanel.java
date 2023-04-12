@@ -1,7 +1,11 @@
+import javafx.util.Pair;
+
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,11 +49,24 @@ public class FilterPanel extends StepPanel {
     private final RecordTable recordTable;
     private final JLabel tableInformation = new JLabel();
 
+    private final JLabel sizeInformation = new JLabel();
+    private final long usedSpace;
+    private final Pair<String, Long> unitAndUnitSize;
+    private final String convertedUsedSpace;
+    private final JPanel content = new JPanel();
+
     List<RowFilter<Object, Object>> filters = new ArrayList<>();
 
+    private final SpringLayout springLayout = new SpringLayout();
+
     public FilterPanel() {
-        SpringLayout springLayout = new SpringLayout();
         setLayout(springLayout);
+
+        usedSpace = PartitionPanel.getOutput().getFreeSpace();
+        unitAndUnitSize = Utility.getUnitAndUnitSize(usedSpace);
+
+        DecimalFormat df = new DecimalFormat("#.##");
+        convertedUsedSpace = df.format((double) usedSpace / unitAndUnitSize.getValue());
 
         Font headerFont = new Font("Arial", Font.BOLD, 17);
         Font textFont = new Font("Arial", Font.PLAIN, 14);
@@ -68,7 +85,6 @@ public class FilterPanel extends StepPanel {
         springLayout.putConstraint(SpringLayout.WEST, waitText, 0, SpringLayout.WEST, filterLabel);
         springLayout.putConstraint(SpringLayout.EAST, waitText, 0, SpringLayout.EAST, filterLabel);
 
-        JPanel content = new JPanel();
         BorderLayout borderLayout = new BorderLayout();
         borderLayout.setVgap(4);
         content.setLayout(borderLayout);
@@ -77,9 +93,14 @@ public class FilterPanel extends StepPanel {
         content.add(filterPanel, BorderLayout.PAGE_START);
 
         JPanel tableHolder = new JPanel(new BorderLayout());
-        recordTable = new RecordTable();
+        recordTable = new RecordTable(this);
         tableHolder.add(new JScrollPane(recordTable), BorderLayout.CENTER);
-        tableHolder.add(tableInformation, BorderLayout.PAGE_END);
+
+        JPanel informationPanel = new JPanel(new BorderLayout());
+        informationPanel.add(tableInformation, BorderLayout.LINE_START);
+        informationPanel.add(sizeInformation, BorderLayout.LINE_END);
+
+        tableHolder.add(informationPanel, BorderLayout.PAGE_END);
         content.add(tableHolder, BorderLayout.CENTER);
 
         add(content);
@@ -89,6 +110,67 @@ public class FilterPanel extends StepPanel {
         springLayout.putConstraint(SpringLayout.EAST, content, 0, SpringLayout.EAST, filterLabel);
 
         doFilter();
+    }
+
+    public void setSelectionSize(long l) {
+        DecimalFormat df = new DecimalFormat("#.##");
+        String convertedSelectedSpace = df.format((double) l / unitAndUnitSize.getValue());
+        sizeInformation.setText(convertedSelectedSpace + unitAndUnitSize.getKey() + "/" + convertedUsedSpace + unitAndUnitSize.getKey());
+
+        boolean isOverCapacity = l > usedSpace;
+        if(isOverCapacity) {
+            BottomPanel.setNextButtonEnabled(false);
+            if(errorMessagePanel == null) {
+                showErrorMessage();
+            }
+        } else {
+            BottomPanel.setNextButtonEnabled(true);
+            if(errorMessagePanel != null) {
+                springLayout.getConstraints(content).setConstraint(SpringLayout.SOUTH, null);
+                springLayout.putConstraint(SpringLayout.SOUTH, content, -10, SpringLayout.SOUTH, this);
+
+                remove(errorMessagePanel);
+                errorMessagePanel = null;
+
+                revalidate();
+                repaint();
+            }
+        }
+    }
+
+    private JPanel errorMessagePanel;
+    private void showErrorMessage() {
+        errorMessagePanel = new JPanel();
+        errorMessagePanel.setBorder(new LineBorder(Color.red, 1));
+        BoxLayout boxLayout = new BoxLayout(errorMessagePanel, BoxLayout.X_AXIS);
+        errorMessagePanel.setLayout(boxLayout);
+
+        JLabel exclamationMark = new JLabel("!");
+        exclamationMark.setForeground(Color.RED);
+
+        JLabel errorMessage = new JLabel("<html>The combined total size of all selected files exceeds the free space on your output drive. Consider selecting a new output drive, or restoring less files at a time.</html>");
+        errorMessage.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+
+        errorMessagePanel.add(Box.createHorizontalStrut(4));
+        errorMessagePanel.add(exclamationMark);
+        errorMessagePanel.add(Box.createHorizontalStrut(4));
+        errorMessagePanel.add(errorMessage);
+        errorMessagePanel.add(Box.createHorizontalStrut(4));
+
+        exclamationMark.setFont(new Font(Font.SANS_SERIF, Font.BOLD,  48));
+
+        springLayout.putConstraint(SpringLayout.NORTH, errorMessagePanel, -errorMessagePanel.getPreferredSize().height, SpringLayout.SOUTH, errorMessagePanel);
+        springLayout.putConstraint(SpringLayout.SOUTH, errorMessagePanel, -10, SpringLayout.SOUTH, this);
+        springLayout.putConstraint(SpringLayout.WEST, errorMessagePanel, 0, SpringLayout.WEST, content);
+        springLayout.putConstraint(SpringLayout.EAST, errorMessagePanel, 0, SpringLayout.EAST, content);
+
+        springLayout.getConstraints(content).setConstraint(SpringLayout.SOUTH, null);
+        springLayout.putConstraint(SpringLayout.SOUTH, content, -10, SpringLayout.NORTH, errorMessagePanel);
+
+        revalidate();
+        repaint();
+
+        add(errorMessagePanel);
     }
 
     private void doFilter() {

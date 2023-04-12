@@ -22,7 +22,10 @@ public class RecordTable extends JTable {
         return recordsToRecover;
     }
 
-    public RecordTable() {
+    private final FilterPanel parent;
+
+    public RecordTable(FilterPanel parent) {
+        this.parent = parent;
         setModel(tableModel);
 
         setTableRules();
@@ -35,10 +38,15 @@ public class RecordTable extends JTable {
 
     private void onRecordsToRecoverUpdated() {
         if(recordsToRecover.isEmpty()) {
+            parent.setSelectionSize(0);
             BottomPanel.setNextButtonEnabled(false);
             return;
         }
-        BottomPanel.setNextButtonEnabled(true);
+        long size = 0;
+        for(GenericRecord record : recordsToRecover) {
+            size += record.fileSizeBytes;
+        }
+        parent.setSelectionSize(size);
     }
 
     private void setTableRules() {
