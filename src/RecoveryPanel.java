@@ -1,15 +1,20 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
+import java.util.prefs.Preferences;
 
 public class RecoveryPanel extends StepPanel {
 
     private final DetailedProgressBar recoveryProgressBar = new DetailedProgressBar();
     private final File outputDirectory;
     private int filesProcessed = 0;
+
+    protected static boolean isLogging;
+    protected static final LogPanel recoveryLogPanel = new LogPanel();
 
     @Override
     public void onNextStep() {
@@ -26,22 +31,59 @@ public class RecoveryPanel extends StepPanel {
         this.deletedRecords = deletedRecords;
         outputDirectory = PartitionPanel.getOutput();
 
+        Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
+        isLogging = prefs.getBoolean("IS_LOGGING", false);
+
         Thread recoveryThread = new Thread(this::initializeRecovery);
         recoveryThread.start();
 
         BottomPanel.onIsFinished();
         BottomPanel.detachBackButton();
 
+        Font headerFont = new Font("Arial", Font.BOLD, 17);
+        Font textFont = new Font("Arial", Font.PLAIN, 14);
+
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JLabel waitLabel = new JLabel("Step 5: Wait");
+        waitLabel.setFont(headerFont);
+        waitLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(waitLabel);
+
+        JLabel waitText = new JLabel("<html>The software is now attempting to recover the selected files. This may take a while depending on how large the files are. Refer to the progress bar below to track the progress of the recovery.</html>");
+        waitText.setFont(textFont);
+        waitText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(waitText);
+
+        add(Box.createVerticalStrut(10));
+
+        initializeRecoveryProgressBar();
+        add(recoveryProgressBar);
+
+        add(Box.createVerticalStrut(10));
+
+        recoveryLogPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(recoveryLogPanel);
+
+        if(!isLogging) {
+            recoveryLogPanel.log("Logging is not currently enabled.");
+        }
+    }
+
+    private void initializeRecoveryProgressBar() {
+        recoveryProgressBar.setPercentageLabelPrefix("Recovering Deleted Files:");
+        recoveryProgressBar.setProgressLabelSuffix("files");
+        recoveryProgressBar.setMaximum(deletedRecords.size());
+        recoveryProgressBar.updateInformationLabels();
+        recoveryProgressBar.setAlignmentX(Component.LEFT_ALIGNMENT);
     }
 
     private void initializeRecovery() {
         if(deletedRecords.isEmpty()) {
-        //stub
+            recoveryLogPanel.log("The list of files to recover is empty.", "<font size=5 color='red'>");
+            recoveryLogPanel.log("Press \"Exit\" to exit the program.", "<font size=5 color='red'>");
         } else {
-            initializeRecoveryProgressBar();
-            add(recoveryProgressBar);
             if(deletedRecords.get(0) instanceof MFTRecord) {
                 recoverNTFSFiles();
             } else if(deletedRecords.get(0) instanceof FAT32Record) {
@@ -52,19 +94,24 @@ public class RecoveryPanel extends StepPanel {
                 }
             }
         }
-        BottomPanel.setNextButtonEnabled(true);
+        onRecoveryEnd();
     }
 
-    private void initializeRecoveryProgressBar() {
-        recoveryProgressBar.setPercentageLabelPrefix("Recovering Deleted Files:");
-        recoveryProgressBar.setProgressLabelSuffix("files");
-        recoveryProgressBar.setMaximum(deletedRecords.size());
-        recoveryProgressBar.updateInformationLabels();
+    private void onRecoveryEnd() {
+        BottomPanel.setNextButtonEnabled(true);
+        recoveryLogPanel.shutdown();
     }
 
     private void recoverNTFSFiles() {
         for(GenericRecord deletedRecord : deletedRecords) {
             MFTRecord mftRecord = (MFTRecord) deletedRecord;
+            if(isLogging) {
+                if(mftRecord.fileName.equals("")) {
+                    recoveryLogPanel.log("Initializing recovery on nameless file");
+                } else {
+                    recoveryLogPanel.log("Initializing recovery on " + mftRecord.fileName);
+                }
+            }
             try {
                 mftRecord.parseDataAttribute();
                 if (mftRecord.isDataResident()) {
@@ -78,6 +125,13 @@ public class RecoveryPanel extends StepPanel {
             filesProcessed ++;
             recoveryProgressBar.setValue(filesProcessed);
             recoveryProgressBar.updateInformationLabels();
+            if(isLogging) {
+                if(mftRecord.fileName.equals("")) {
+                    recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
+                } else {
+                    recoveryLogPanel.log("Successfully finished recovery of " + mftRecord.fileName, "<font color='#ADF5A5'>");
+                }
+            }
         }
     }
 
@@ -131,6 +185,14 @@ public class RecoveryPanel extends StepPanel {
         for(GenericRecord deletedRecord : deletedRecords) {
             FAT32Record fat32Record = (FAT32Record) deletedRecord;
 
+            if(isLogging) {
+                if(deletedRecord.fileName.equals("")) {
+                    recoveryLogPanel.log("Initializing recovery on nameless file");
+                } else {
+                    recoveryLogPanel.log("Initializing recovery on " + deletedRecord.fileName);
+                }
+            }
+
             FAT32Information fat32Information = FAT32Information.getInstance();
             int bytesPerCluster = fat32Information.bytesPerSector * fat32Information.sectorsPerCluster;
             int fatByteOffset = fat32Information.reservedSectors * fat32Information.bytesPerSector;
@@ -173,6 +235,14 @@ public class RecoveryPanel extends StepPanel {
                 }
             }
             fos.close();
+
+            if(isLogging) {
+                if(deletedRecord.fileName.equals("")) {
+                    recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
+                } else {
+                    recoveryLogPanel.log("Successfully finished recovery of " + deletedRecord.fileName, "<font color='#ADF5A5'>");
+                }
+            }
         }
     }
 }
