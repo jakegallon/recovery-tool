@@ -26,11 +26,19 @@ public class RecoveryPanel extends StepPanel {
         this.deletedRecords = deletedRecords;
         outputDirectory = PartitionPanel.getOutput();
 
+        Thread recoveryThread = new Thread(this::initializeRecovery);
+        recoveryThread.start();
+
+        BottomPanel.onIsFinished();
+        BottomPanel.detachBackButton();
+
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(new EmptyBorder(10, 10, 10, 10));
+    }
 
+    private void initializeRecovery() {
         if(deletedRecords.isEmpty()) {
-            //stub
+        //stub
         } else {
             initializeRecoveryProgressBar();
             add(recoveryProgressBar);
@@ -44,6 +52,7 @@ public class RecoveryPanel extends StepPanel {
                 }
             }
         }
+        BottomPanel.setNextButtonEnabled(true);
     }
 
     private void initializeRecoveryProgressBar() {

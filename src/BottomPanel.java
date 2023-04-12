@@ -56,6 +56,10 @@ public class BottomPanel extends JPanel {
         });
     }
 
+    public static void detachBackButton() {
+        backButton.setVisible(false);
+    }
+
     private void addBackButton() {
         backButton.addActionListener(e -> Frame.backStep());
         backButton.setEnabled(false);
