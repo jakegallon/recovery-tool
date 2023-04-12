@@ -51,6 +51,23 @@ public class FilterPanel extends StepPanel {
         SpringLayout springLayout = new SpringLayout();
         setLayout(springLayout);
 
+        Font headerFont = new Font("Arial", Font.BOLD, 17);
+        Font textFont = new Font("Arial", Font.PLAIN, 14);
+
+        JLabel filterLabel = new JLabel("Step 4: Filter");
+        filterLabel.setFont(headerFont);
+        add(filterLabel);
+        springLayout.putConstraint(SpringLayout.NORTH, filterLabel, 10, SpringLayout.NORTH, this);
+        springLayout.putConstraint(SpringLayout.WEST, filterLabel, 10, SpringLayout.WEST, this);
+        springLayout.putConstraint(SpringLayout.EAST, filterLabel, -10, SpringLayout.EAST, this);
+
+        JLabel waitText = new JLabel("<html>Below are all of the deleted files which the program found on your drive. By selecting them using the checkbox on the left, you can mark them for recovery. Click next to initiate recovery, or cancel if you do not wish to recover any files.</html>");
+        waitText.setFont(textFont);
+        add(waitText);
+        springLayout.putConstraint(SpringLayout.NORTH, waitText, 0, SpringLayout.SOUTH, filterLabel);
+        springLayout.putConstraint(SpringLayout.WEST, waitText, 0, SpringLayout.WEST, filterLabel);
+        springLayout.putConstraint(SpringLayout.EAST, waitText, 0, SpringLayout.EAST, filterLabel);
+
         JPanel content = new JPanel();
         BorderLayout borderLayout = new BorderLayout();
         borderLayout.setVgap(4);
@@ -66,10 +83,10 @@ public class FilterPanel extends StepPanel {
         content.add(tableHolder, BorderLayout.CENTER);
 
         add(content);
-        springLayout.putConstraint(SpringLayout.NORTH, content, 10, SpringLayout.NORTH, this);
+        springLayout.putConstraint(SpringLayout.NORTH, content, 10, SpringLayout.SOUTH, waitText);
         springLayout.putConstraint(SpringLayout.SOUTH, content, -10, SpringLayout.SOUTH, this);
-        springLayout.putConstraint(SpringLayout.WEST, content, 10, SpringLayout.WEST, this);
-        springLayout.putConstraint(SpringLayout.EAST, content, -10, SpringLayout.EAST, this);
+        springLayout.putConstraint(SpringLayout.WEST, content, 0, SpringLayout.WEST, filterLabel);
+        springLayout.putConstraint(SpringLayout.EAST, content, 0, SpringLayout.EAST, filterLabel);
 
         doFilter();
     }
