@@ -13,8 +13,8 @@ public class RecoveryPanel extends StepPanel {
     private final File outputDirectory;
     private int filesProcessed = 0;
 
-    protected static boolean isLogging;
-    protected static final LogPanel recoveryLogPanel = new LogPanel();
+    protected boolean isLogging;
+    protected final LogPanel recoveryLogPanel = new LogPanel();
 
     @Override
     public void onNextStep() {

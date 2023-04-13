@@ -75,7 +75,7 @@ public class RecordTable extends JTable {
     }
 
     private void populateTable() {
-        ArrayList<GenericRecord> deletedRecords = NTFSScanPanel.getDeletedRecords();
+        ArrayList<GenericRecord> deletedRecords = parent.deletedRecords;
         for(GenericRecord deletedRecord : deletedRecords) {
             Object[] row = {
                     deletedRecord,

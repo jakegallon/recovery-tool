@@ -59,7 +59,10 @@ public class FilterPanel extends StepPanel {
 
     private final SpringLayout springLayout = new SpringLayout();
 
-    public FilterPanel() {
+    protected final ArrayList<GenericRecord> deletedRecords;
+
+    public FilterPanel(ArrayList<GenericRecord> deletedRecords) {
+        this.deletedRecords = deletedRecords;
         setLayout(springLayout);
 
         usedSpace = PartitionPanel.getOutput().getFreeSpace();

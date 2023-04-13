@@ -5,13 +5,14 @@ import java.util.*;
 public class NTFSScanPanel extends ScanPanel {
 
     public NTFSScanPanel() {
-        super(NTFSScanner);
+        super();
+        setReadRunnable(NTFSScanner);
 
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         readProgressBar.setPercentageLabelPrefix("Scanning drive " + ntfsInformation.getRoot().toString().substring(4));
     }
 
-    private static final Runnable NTFSScanner = () -> {
+    private final Runnable NTFSScanner = () -> {
         isReading = true;
         try {
             scanRootForDeletedFiles();
@@ -20,7 +21,7 @@ public class NTFSScanPanel extends ScanPanel {
         }
     };
 
-    private static void scanRootForDeletedFiles() throws IOException {
+    private void scanRootForDeletedFiles() throws IOException {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         int mftRecordLength = ntfsInformation.getMFTRecordLength();
 

@@ -9,32 +9,31 @@ public class ScanPanel extends StepPanel {
 
     protected JLabel foundFilesLabel;
 
-    protected static boolean isReading = false;
-    protected static DetailedProgressBar readProgressBar = new DetailedProgressBar();
-    protected static int deletedFilesFound = 0;
+    protected boolean isReading = false;
+    protected DetailedProgressBar readProgressBar = new DetailedProgressBar();
+    protected int deletedFilesFound = 0;
 
-    protected static volatile boolean isProcessing = false;
-    protected static DetailedProgressBar processProgressBar = new DetailedProgressBar();
-    protected static int deletedFilesProcessed = 0;
+    protected volatile boolean isProcessing = false;
+    protected DetailedProgressBar processProgressBar = new DetailedProgressBar();
+    protected int deletedFilesProcessed = 0;
 
     private final Timer scanTimer;
-    protected static final ConcurrentLinkedQueue<GenericRecord> updateQueue = new ConcurrentLinkedQueue<>();
+    protected final ConcurrentLinkedQueue<GenericRecord> updateQueue = new ConcurrentLinkedQueue<>();
 
-    protected static final ArrayList<GenericRecord> deletedRecords = new ArrayList<>();
-    public static ArrayList<GenericRecord> getDeletedRecords() {
-        return deletedRecords;
+    protected final ArrayList<GenericRecord> deletedRecords = new ArrayList<>();
+
+    protected boolean isLogging;
+    protected final LogPanel scanLogPanel = new LogPanel();
+    private final LogPanel processLogPanel = new LogPanel();
+
+    protected void setReadRunnable(Runnable runnable) {
+        Thread readThread = new Thread(runnable);
+        readThread.start();
     }
 
-    protected static boolean isLogging;
-    protected static final LogPanel scanLogPanel = new LogPanel();
-    private static final LogPanel processLogPanel = new LogPanel();
-
-    protected ScanPanel(Runnable readMethod) {
+    protected ScanPanel() {
         Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
         isLogging = prefs.getBoolean("IS_LOGGING", false);
-
-        Thread readThread = new Thread(readMethod);
-        readThread.start();
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -91,7 +90,7 @@ public class ScanPanel extends StepPanel {
 
     @Override
     public void onNextStep() {
-        FilterPanel filterPanel = new FilterPanel();
+        FilterPanel filterPanel = new FilterPanel(deletedRecords);
         Frame.setStepPanel(filterPanel);
 
         BottomPanel.setNextButtonEnabled(false);
@@ -155,25 +154,25 @@ public class ScanPanel extends StepPanel {
         add(Box.createVerticalStrut(10));
     }
 
-    public synchronized static void addRecordToUpdateQueue(GenericRecord genericRecord) {
+    public synchronized void addRecordToUpdateQueue(GenericRecord genericRecord) {
         updateQueue.add(genericRecord);
         if (!isProcessing) {
             isProcessing = true;
-            Thread processingThread = new Thread(ScanPanel::processQueue);
+            Thread processingThread = new Thread(this::processQueue);
             processingThread.setDaemon(true);
             processingThread.start();
         }
         processProgressBar.setMaximum(deletedFilesFound);
     }
 
-    private static void processQueue() {
+    private void processQueue() {
         while (!updateQueue.isEmpty()) {
             process(updateQueue.poll());
         }
         isProcessing = false;
     }
 
-    private static void process(GenericRecord genericRecord) {
+    private void process(GenericRecord genericRecord) {
         genericRecord.process();
         deletedFilesProcessed ++;
         if(isLogging) {
