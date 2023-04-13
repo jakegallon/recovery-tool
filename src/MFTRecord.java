@@ -104,6 +104,7 @@ public class MFTRecord extends GenericRecord {
         fileName = new String(targetText, StandardCharsets.UTF_16LE);
     }
 
+    @Override
     public void process() {
         try {
             parseDataAttribute();
