@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.util.*;
 
@@ -48,29 +49,34 @@ public class NTFSScanPanel extends ScanPanel {
             long offsetBytes = dataRun.getKey();
             long fileLength = dataRun.getValue() * 4;
             for(int i = 0; i <= fileLength; i++) {
-                readProgressBar.setValue(currentFileOffset + i);
+                if(!isReading) return;
+                try {
+                    readProgressBar.setValue(currentFileOffset + i);
 
-                byte[] mftRecordBytes = Utility.readMFTRecord(diskChannel, offsetBytes);
-                if (mftRecordBytes != null) {
-                    MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
-                    if(mftRecord.isDeleted()){
-                        deletedFilesFound++;
-                        deletedRecords.add(mftRecord);
-                        if(isLogging) {
-                            scanLogPanel.log("Found deleted file " + mftRecord.getFileName());
-                        }
-                        addRecordToUpdateQueue(mftRecord);
-                    } else {
-                        if(isLogging) {
-                            if(!mftRecord.getFileName().equals("")) {
-                                scanLogPanel.log("Found present file " + mftRecord.getFileName());
-                            } else {
-                                scanLogPanel.log("Found nameless present file");
+                    byte[] mftRecordBytes = Utility.readMFTRecord(diskChannel, offsetBytes);
+                    if (mftRecordBytes != null) {
+                        MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
+                        if(mftRecord.isDeleted()){
+                            deletedFilesFound++;
+                            deletedRecords.add(mftRecord);
+                            if(isLogging) {
+                                scanLogPanel.log("Found deleted file " + mftRecord.getFileName());
+                            }
+                            addRecordToUpdateQueue(mftRecord);
+                        } else {
+                            if(isLogging) {
+                                if(!mftRecord.getFileName().equals("")) {
+                                    scanLogPanel.log("Found present file " + mftRecord.getFileName());
+                                } else {
+                                    scanLogPanel.log("Found nameless present file");
+                                }
                             }
                         }
                     }
+                    offsetBytes += mftRecordLength;
+                } catch (ClosedByInterruptException e) {
+                    return;
                 }
-                offsetBytes += mftRecordLength;
             }
             currentFileOffset += fileLength;
         }

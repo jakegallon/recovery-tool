@@ -26,8 +26,11 @@ public class ScanPanel extends StepPanel {
     protected final LogPanel scanLogPanel = new LogPanel();
     private final LogPanel processLogPanel = new LogPanel();
 
+    private Thread readThread;
+    private boolean isInterrupted = false;
+
     protected void setReadRunnable(Runnable runnable) {
-        Thread readThread = new Thread(runnable);
+        readThread = new Thread(runnable);
         readThread.start();
     }
 
@@ -99,10 +102,14 @@ public class ScanPanel extends StepPanel {
 
     @Override
     public void onBackStep() {
+        isReading = false;
+        isInterrupted = true;
+        readThread.interrupt();
+
         PartitionPanel partitionPanel = new PartitionPanel();
         Frame.setStepPanel(partitionPanel);
 
-        BottomPanel.setNextButtonEnabled(true);
+        BottomPanel.setNextButtonEnabled(false);
         BottomPanel.setBackButtonEnabled(false);
     }
 
@@ -124,7 +131,7 @@ public class ScanPanel extends StepPanel {
     }
 
     private void onProcessingEnd() {
-        if(deletedRecords.isEmpty()) {
+        if(deletedRecords.isEmpty() && !isInterrupted) {
             processLogPanel.log("No deleted records were found on this drive.", "<font size=5 color='red'>");
             processLogPanel.log("Press \"Back\" to scan a different drive, or press \"Exit\" to exit the program.", "<font size=5 color='red'>");
             BottomPanel.onIsFinished();
