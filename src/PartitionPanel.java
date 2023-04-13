@@ -136,10 +136,7 @@ public class PartitionPanel extends StepPanel {
         checkNextStepAllowed();
     }
 
-    private static File output;
-    public static File getOutput() {
-        return output;
-    }
+    private File output;
     public void notifyOutputLocationSelected(File f) {
         output = f;
 

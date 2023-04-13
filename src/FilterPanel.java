@@ -5,9 +5,11 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 public class FilterPanel extends StepPanel {
     @Override
@@ -65,7 +67,9 @@ public class FilterPanel extends StepPanel {
         this.deletedRecords = deletedRecords;
         setLayout(springLayout);
 
-        usedSpace = PartitionPanel.getOutput().getFreeSpace();
+        Preferences preferences = Preferences.userNodeForPackage(PartitionPanel.class);
+        String selectedFilePath = preferences.get("LAST_DIRECTORY", null);
+        usedSpace = new File(selectedFilePath).getFreeSpace();
         unitAndUnitSize = Utility.getUnitAndUnitSize(usedSpace);
 
         DecimalFormat df = new DecimalFormat("#.##");

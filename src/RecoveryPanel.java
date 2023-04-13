@@ -29,7 +29,10 @@ public class RecoveryPanel extends StepPanel {
     private final ArrayList<GenericRecord> deletedRecords;
     public RecoveryPanel(ArrayList<GenericRecord> deletedRecords) {
         this.deletedRecords = deletedRecords;
-        outputDirectory = PartitionPanel.getOutput();
+
+        Preferences preferences = Preferences.userNodeForPackage(PartitionPanel.class);
+        String selectedFilePath = preferences.get("LAST_DIRECTORY", null);
+        outputDirectory = new File(selectedFilePath);
 
         Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
         isLogging = prefs.getBoolean("IS_LOGGING", false);
