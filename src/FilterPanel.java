@@ -23,7 +23,10 @@ public class FilterPanel extends StepPanel {
 
     @Override
     public void onBackStep() {
+        ScanPanel scanPanel = new ScanPanel(deletedRecords);
+        Frame.setStepPanel(scanPanel);
 
+        BottomPanel.setNextButtonEnabled(true);
     }
 
     private final RowFilter<Object, Object> emptyFileFilter = new RowFilter<Object, Object>() {

@@ -34,6 +34,29 @@ public class ScanPanel extends StepPanel {
         readThread.start();
     }
 
+    protected ScanPanel(ArrayList<GenericRecord> deletedRecords) {
+        this();
+        this.deletedRecords.addAll(deletedRecords);
+
+        int size = deletedRecords.size();
+        deletedFilesFound = size;
+        deletedFilesProcessed = size;
+
+        readProgressBar.setMaximum(100);
+        readProgressBar.setValue(100);
+        processProgressBar.setMaximum(size);
+        processProgressBar.setValue(size);
+
+        foundFilesLabel.setText(size + " deleted files found.");
+
+        scanLogPanel.log("Restored " + size + " deleted files from previous scan.");
+        processLogPanel.log("Restored " + size + " deleted files from previous scan.");
+        scanLogPanel.log("Press next to continue to filter, or back to scan a different partition.");
+        processLogPanel.log("Press next to continue to filter, or back to scan a different partition.");
+
+        onProcessingEnd();
+    }
+
     protected ScanPanel() {
         Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
         isLogging = prefs.getBoolean("IS_LOGGING", false);
@@ -104,7 +127,9 @@ public class ScanPanel extends StepPanel {
     public void onBackStep() {
         isReading = false;
         isInterrupted = true;
-        readThread.interrupt();
+        if(readThread != null) {
+            readThread.interrupt();
+        }
 
         PartitionPanel partitionPanel = new PartitionPanel();
         Frame.setStepPanel(partitionPanel);
