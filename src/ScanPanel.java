@@ -157,8 +157,8 @@ public class ScanPanel extends StepPanel {
 
     private void onProcessingEnd() {
         if(deletedRecords.isEmpty() && !isInterrupted) {
-            processLogPanel.log("No deleted records were found on this drive.", "<font size=5 color='red'>");
-            processLogPanel.log("Press \"Back\" to scan a different drive, or press \"Exit\" to exit the program.", "<font size=5 color='red'>");
+            processLogPanel.log("No deleted records were found on this drive.", "<font color='#FF382E'>");
+            processLogPanel.log("Press \"Back\" to scan a different drive, or press \"Exit\" to exit the program.", "<font color='#FF382E'>");
             BottomPanel.onIsFinished();
         }
 
