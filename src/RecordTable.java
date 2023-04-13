@@ -90,13 +90,23 @@ public class RecordTable extends JTable {
         }
     }
 
+    int mouseDownRow;
+
     private void addMouseListener() {
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
+                int visualRow = getSelectedRow();
+                mouseDownRow = getRowSorter().convertRowIndexToModel(visualRow);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
                 int column = getColumnModel().getColumnIndex(IS_SELECTED_COLUMN);
                 int visualRow = getSelectedRow();
                 int row = getRowSorter().convertRowIndexToModel(visualRow);
+
+                if(mouseDownRow != row) return;
 
                 if(columnAtPoint(e.getPoint()) != column) setValueAt(!(boolean) getValueAt(visualRow, column), visualRow, column);
                 boolean isSelected = (boolean) getValueAt(visualRow, column);
