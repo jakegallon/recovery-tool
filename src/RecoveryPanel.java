@@ -1,9 +1,14 @@
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -128,13 +133,6 @@ public class RecoveryPanel extends StepPanel {
             filesProcessed ++;
             recoveryProgressBar.setValue(filesProcessed);
             recoveryProgressBar.updateInformationLabels();
-            if(isLogging) {
-                if(mftRecord.fileName.equals("")) {
-                    recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
-                } else {
-                    recoveryLogPanel.log("Successfully finished recovery of " + mftRecord.fileName, "<font color='#ADF5A5'>");
-                }
-            }
         }
     }
 
@@ -180,6 +178,26 @@ public class RecoveryPanel extends StepPanel {
             diskAccess.close();
         }
         fos.close();
+
+        Tika tika = new Tika();
+        String mimeType = tika.detect(newFile);
+        MimeTypes allTypes = MimeTypes.getDefaultMimeTypes();
+        try {
+            String extension = allTypes.forName(mimeType).getExtension();
+            if(!extension.equalsIgnoreCase(mftRecord.fileExtension)) {
+                recoveryLogPanel.log("Failed recovery of " + (!mftRecord.fileName.equals("") ? mftRecord.fileName : "nameless file."), "<font color='#FF382E'>");
+                recoveryLogPanel.log("↪ Reason: MIME data mismatch. File has extension: " + mftRecord.fileExtension + ", MIME data reports extension: " + extension, "<font color='#FF382E'>");
+                Files.delete(newFile.toPath());
+                return;
+            }
+        } catch (MimeTypeException e) {
+            throw new RuntimeException(e);
+        }
+        if(mftRecord.fileName.equals("")) {
+            recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
+        } else {
+            recoveryLogPanel.log("Successfully finished recovery of " + mftRecord.fileName, "<font color='#ADF5A5'>");
+        }
     }
 
     private static final long MAX_CLUSTER_VALUE = 0x0FFFFFEF;
