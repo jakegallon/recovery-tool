@@ -152,11 +152,18 @@ public class RecoveryPanel extends StepPanel {
         final int bytesPerCluster = ntfsInformation.getBytesPerCluster();
         File root = ntfsInformation.getRoot();
 
+        HashMap<Long, Long> dataRunOffsetClusters = mftRecord.getDataRunOffsetClusters();
+
+        if(dataRunOffsetClusters == null) {
+            recoveryLogPanel.log("Failed recovery of " + (!mftRecord.fileName.equals("") ? mftRecord.fileName : "nameless file."), "<font color='#FF382E'>");
+            recoveryLogPanel.log("↪ Reason: Unreadable MFT record Data Runs", "<font color='#FF382E'>");
+            return;
+        }
+
         String fileName = mftRecord.getFileName();
         File newFile = new File(outputDirectory, fileName);
         FileOutputStream fos = new FileOutputStream(newFile);
 
-        HashMap<Long, Long> dataRunOffsetClusters = mftRecord.getDataRunOffsetClusters();
         for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {
             long dataRunOffsetBytes = dataRun.getKey();
             long dataRunLengthClusters = dataRun.getValue();

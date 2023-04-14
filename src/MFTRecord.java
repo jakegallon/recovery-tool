@@ -160,7 +160,11 @@ public class MFTRecord extends GenericRecord {
 
     public HashMap<Long, Long> getDataRunOffsetClusters() {
         if(dataRunOffsetClusters == null) {
-            parseDataRuns();
+            try {
+                parseDataRuns();
+            } catch (RuntimeException e) {
+                return null;
+            }
         }
         return dataRunOffsetClusters;
     }
@@ -169,11 +173,8 @@ public class MFTRecord extends GenericRecord {
         dataRunOffsetClusters = new HashMap<>();
 
         byte[] dataAttribute;
-        try {
-            dataAttribute = getAttribute(Attribute.DATA);
-        } catch (RuntimeException e) {
-            return; //todo handle
-        }
+        dataAttribute = getAttribute(Attribute.DATA);
+
         int dataAttributeDataRunsOffset = dataAttribute[0x20];
         byte[] dataRunBytes = Arrays.copyOfRange(dataAttribute, dataAttributeDataRunsOffset, dataAttribute.length);
         int dataRunOffset = 0;
