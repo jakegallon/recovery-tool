@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="flatlaf-3.0" level="project" />
+    <orderEntry type="library" name="tika-app-2.7.0" level="project" />
   </component>
 </module>
