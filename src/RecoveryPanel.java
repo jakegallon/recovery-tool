@@ -19,7 +19,7 @@ public class RecoveryPanel extends StepPanel {
     private int filesProcessed = 0;
 
     protected boolean isLogging;
-    protected final LogPanel recoveryLogPanel = new LogPanel();
+    protected final LogPanel recoveryLogPanel = new LogPanel(Integer.MAX_VALUE);
 
     @Override
     public void onNextStep() {

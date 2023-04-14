@@ -14,7 +14,7 @@ public class LogPanel extends JPanel {
     private final JPanel logPanel = new JPanel();
     private final JScrollPane logScrollPane = new JScrollPane(logPanel);
 
-    private final int logSize = 100;
+    private int logSize = 100;
 
     private final LocalDateTime timestampOrigin = LocalDateTime.now();
 
@@ -23,6 +23,11 @@ public class LogPanel extends JPanel {
 
     private final Timer timestampTimer;
     private final Timer updateTimer;
+
+    public LogPanel(int maxSize) {
+        this();
+        logSize = maxSize;
+    }
 
     public LogPanel() {
         setLayout(new BorderLayout());
