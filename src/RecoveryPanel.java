@@ -152,7 +152,7 @@ public class RecoveryPanel extends StepPanel {
         final int bytesPerCluster = ntfsInformation.getBytesPerCluster();
         File root = ntfsInformation.getRoot();
 
-        HashMap<Long, Long> dataRunOffsetClusters = mftRecord.getDataRunOffsetClusters();
+        LinkedHashMap<Long, Long> dataRunOffsetClusters = mftRecord.getDataRunOffsetClusters();
 
         if(dataRunOffsetClusters == null) {
             recoveryLogPanel.log("Failed recovery of " + (!mftRecord.fileName.equals("") ? mftRecord.fileName : "nameless file."), "<font color='#FF382E'>");

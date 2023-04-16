@@ -156,9 +156,9 @@ public class MFTRecord extends GenericRecord {
         return DATE_FORMAT.format(fileTimeUnix);
     }
 
-    private HashMap<Long, Long> dataRunOffsetClusters;
+    private LinkedHashMap<Long, Long> dataRunOffsetClusters;
 
-    public HashMap<Long, Long> getDataRunOffsetClusters() {
+    public LinkedHashMap<Long, Long> getDataRunOffsetClusters() {
         if(dataRunOffsetClusters == null) {
             try {
                 parseDataRuns();
@@ -170,7 +170,7 @@ public class MFTRecord extends GenericRecord {
     }
 
     private void parseDataRuns() {
-        dataRunOffsetClusters = new HashMap<>();
+        dataRunOffsetClusters = new LinkedHashMap<>();
 
         byte[] dataAttribute;
         dataAttribute = getAttribute(Attribute.DATA);

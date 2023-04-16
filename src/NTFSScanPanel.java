@@ -35,7 +35,7 @@ public class NTFSScanPanel extends ScanPanel {
             throw new RuntimeException("$MFT has resident data attribute");
         }
 
-        HashMap<Long, Long> dataRunOffsetClusters = mft.getDataRunOffsetClusters();
+        LinkedHashMap<Long, Long> dataRunOffsetClusters = mft.getDataRunOffsetClusters();
 
         int totalFilesCounter = 0;
         for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {
