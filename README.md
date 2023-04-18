@@ -2,7 +2,8 @@
 <p>RecoveryTool is an open source (GPL v3) file recovery software written in Java. It is capable of parsing NTFS and FAT32 file systems, marking deleted files, and recovering their data.</p>
 <p></p>
 <h2>Credits</h2>
-<p>One third-party library is used in this project:</p>
+<p>Two third-party libraries are used in this project:</p>
 <ul>
-  <li><a href="https://github.com/JFormDesigner/FlatLaf">FlatLAF</a>
+  <li><a href="https://github.com/apache/tika">Apache Tika</a></li>
+  <li><a href="https://github.com/JFormDesigner/FlatLaf">FlatLAF</a></li>
 </ul>
