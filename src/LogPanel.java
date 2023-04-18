@@ -7,7 +7,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class LogPanel extends JPanel {
 
@@ -56,7 +56,7 @@ public class LogPanel extends JPanel {
     }
 
     //for handling rapid logging
-    ArrayList<String> incomingLog = new ArrayList<>();
+    LinkedList<String> incomingLog = new LinkedList<>();
 
     public void log(String string) {
         incomingLog.add(timestamp + string);
@@ -67,7 +67,7 @@ public class LogPanel extends JPanel {
     }
 
     private void logUpdate() {
-        ArrayList<String> cachedLog = new ArrayList<>(incomingLog);
+        LinkedList<String> cachedLog = new LinkedList<>(incomingLog);
         logPanel.removeAll();
         if (cachedLog.size() > logSize) {
             cachedLog.subList(0, cachedLog.size() - logSize).clear();
