@@ -42,6 +42,11 @@ public class RecoveryPanel extends StepPanel {
         Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
         isLogging = prefs.getBoolean("IS_LOGGING", false);
 
+        if(!isLogging) {
+            recoveryLogPanel.log("Although logging is disabled, recovery will still be logged.");
+            recoveryLogPanel.log("This has negligible impact on performance and allows you to know why some files may not be recovered.");
+        }
+
         Thread recoveryThread = new Thread(this::initializeRecovery);
         recoveryThread.start();
 
@@ -73,10 +78,6 @@ public class RecoveryPanel extends StepPanel {
 
         recoveryLogPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(recoveryLogPanel);
-
-        if(!isLogging) {
-            recoveryLogPanel.log("Logging is not currently enabled.");
-        }
     }
 
     private void initializeRecoveryProgressBar() {
@@ -113,12 +114,10 @@ public class RecoveryPanel extends StepPanel {
     private void recoverNTFSFiles() {
         for(GenericRecord deletedRecord : deletedRecords) {
             MFTRecord mftRecord = (MFTRecord) deletedRecord;
-            if(isLogging) {
-                if(mftRecord.fileName.equals("")) {
-                    recoveryLogPanel.log("Initializing recovery on nameless file");
-                } else {
-                    recoveryLogPanel.log("Initializing recovery on " + mftRecord.fileName);
-                }
+            if(mftRecord.fileName.equals("")) {
+                recoveryLogPanel.log("Initializing recovery on nameless file");
+            } else {
+                recoveryLogPanel.log("Initializing recovery on " + mftRecord.fileName);
             }
             try {
                 mftRecord.parseDataAttribute();
@@ -213,12 +212,10 @@ public class RecoveryPanel extends StepPanel {
         for(GenericRecord deletedRecord : deletedRecords) {
             FAT32Record fat32Record = (FAT32Record) deletedRecord;
 
-            if(isLogging) {
-                if(deletedRecord.fileName.equals("")) {
-                    recoveryLogPanel.log("Initializing recovery on nameless file");
-                } else {
-                    recoveryLogPanel.log("Initializing recovery on " + deletedRecord.fileName);
-                }
+            if(deletedRecord.fileName.equals("")) {
+                recoveryLogPanel.log("Initializing recovery on nameless file");
+            } else {
+                recoveryLogPanel.log("Initializing recovery on " + deletedRecord.fileName);
             }
 
             FAT32Information fat32Information = FAT32Information.getInstance();
@@ -264,12 +261,10 @@ public class RecoveryPanel extends StepPanel {
             }
             fos.close();
 
-            if(isLogging) {
-                if(deletedRecord.fileName.equals("")) {
-                    recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
-                } else {
-                    recoveryLogPanel.log("Successfully finished recovery of " + deletedRecord.fileName, "<font color='#ADF5A5'>");
-                }
+            if(deletedRecord.fileName.equals("")) {
+                recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
+            } else {
+                recoveryLogPanel.log("Successfully finished recovery of " + deletedRecord.fileName, "<font color='#ADF5A5'>");
             }
         }
     }
