@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 public class RecoveryPanel extends StepPanel {
@@ -188,16 +189,28 @@ public class RecoveryPanel extends StepPanel {
         Tika tika = new Tika();
         String mimeType = tika.detect(newFile);
         MimeTypes allTypes = MimeTypes.getDefaultMimeTypes();
-        try {
-            String extension = allTypes.forName(mimeType).getExtension();
-            if(!extension.equalsIgnoreCase(mftRecord.fileExtension)) {
-                recoveryLogPanel.log("Failed recovery of " + (!mftRecord.fileName.equals("") ? mftRecord.fileName : "nameless file."), "<font color='#FF382E'>");
-                recoveryLogPanel.log("↪ Reason: MIME data mismatch. File has extension: " + mftRecord.fileExtension + ", MIME data reports extension: " + extension, "<font color='#FF382E'>");
-                Files.delete(newFile.toPath());
-                return;
+        if(!mimeType.equals("application/octet-stream") && !mimeType.equals("text/plain")) {
+            try {
+                List<String> extensions = allTypes.forName(mimeType).getExtensions();
+
+                boolean isMatching = false;
+                for (String extension : extensions) {
+                    if (extension.equalsIgnoreCase(mftRecord.fileExtension)) {
+                        isMatching = true;
+                        break;
+                    }
+                }
+                if (!isMatching) {
+                    recoveryLogPanel.log("Failed recovery of " + (!mftRecord.fileName.equals("") ? mftRecord.fileName : "nameless file."), "<font color='#FF382E'>");
+                    recoveryLogPanel.log("↪ Reason: MIME data mismatch. Extension: " + mftRecord.fileExtension + " incompatible with MIME: " + mimeType, "<font color='#FF382E'>");
+                    Files.delete(newFile.toPath());
+                    return;
+                }
+            } catch (MimeTypeException e) {
+                throw new RuntimeException(e);
             }
-        } catch (MimeTypeException e) {
-            throw new RuntimeException(e);
+        } else {
+            recoveryLogPanel.log("File " + (!mftRecord.fileName.equals("") ? mftRecord.fileName : "nameless file") + " has default MIME type and may be corrupt", "<font color='#F27F0C'>");
         }
         if(mftRecord.fileName.equals("")) {
             recoveryLogPanel.log("Successfully finished recovery of nameless file", "<font color='#ADF5A5'>");
