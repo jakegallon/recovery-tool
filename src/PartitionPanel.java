@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.io.File;
+import java.util.Objects;
 import java.util.prefs.Preferences;
 
 public class PartitionPanel extends StepPanel {
@@ -44,7 +45,7 @@ public class PartitionPanel extends StepPanel {
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
 
-        ImageIcon icon = new ImageIcon("src/res/icon.png");
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/res/icon.png")));
         Image image = icon.getImage().getScaledInstance(64, 64, Image.SCALE_SMOOTH);
         icon = new ImageIcon(image);
         JLabel iconLabel = new JLabel(icon);
