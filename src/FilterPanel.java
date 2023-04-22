@@ -1,5 +1,3 @@
-import javafx.util.Pair;
-
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
