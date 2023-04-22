@@ -189,6 +189,12 @@ public class MFTRecord extends GenericRecord {
             long startClusters = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataRunBytes, dataRunOffset+1+lengthLength, dataRunOffset+1+lengthLength+startLength), true);
             long startBytes = startClusters*4096;
 
+            TreeSet<Long> sortedKeys = new TreeSet<>(dataRunOffsetClusters.keySet());
+            if(!sortedKeys.isEmpty()) {
+                Long lastKey = sortedKeys.last();
+                startBytes += lastKey;
+            }
+
             dataRunOffsetClusters.put(startBytes, lengthClusters);
             dataRunOffset += startLength + lengthLength + 1;
         }
