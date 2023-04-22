@@ -8,6 +8,7 @@ import java.awt.event.MouseWheelListener;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class LogPanel extends JPanel {
 
@@ -56,23 +57,34 @@ public class LogPanel extends JPanel {
     }
 
     //for handling rapid logging
-    LinkedList<String> incomingLog = new LinkedList<>();
+    ConcurrentLinkedDeque<String> incomingLog = new ConcurrentLinkedDeque<>();
 
     public void log(String string) {
         incomingLog.add(timestamp + string);
+        if (incomingLog.size() > logSize) {
+            incomingLog.removeFirst();
+        }
     }
 
     public void log(String string, String fontTag) {
         incomingLog.add("<html>" + timestamp + fontTag + string + "</font></html>");
+        if (incomingLog.size() > logSize) {
+            incomingLog.removeFirst();
+        }
     }
 
     private void logUpdate() {
-        LinkedList<String> cachedLog = new LinkedList<>(incomingLog);
         logPanel.removeAll();
-        if (cachedLog.size() > logSize) {
-            cachedLog.subList(0, cachedLog.size() - logSize).clear();
+
+        LinkedList<String> showLog = new LinkedList<>(incomingLog);
+        while(showLog.size() < 100) {
+            showLog.add(" ");
         }
-        for(String message : cachedLog) {
+        while(showLog.size() > 100) {
+            showLog.removeFirst();
+        }
+
+        for(String message : showLog) {
             JLabel label = new JLabel(message);
             logPanel.add(label);
         }
