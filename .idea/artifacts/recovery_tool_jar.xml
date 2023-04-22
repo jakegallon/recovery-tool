@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="recovery-tool:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/recovery_tool_jar</output-path>
+    <root id="archive" name="recovery-tool.jar">
+      <element id="module-output" name="recovery-tool" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/tika-app-2.7.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/flatlaf-3.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
