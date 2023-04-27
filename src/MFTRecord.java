@@ -140,11 +140,15 @@ public class MFTRecord extends GenericRecord {
         return fileExtension;
     }
 
-    private long parseFileSizeBytes() {byte[] dataAttribute = getAttribute(Attribute.DATA);
+    private long parseFileSizeBytes() {
+        byte[] dataAttribute = getAttribute(Attribute.DATA);
         if(isDataResident) {
             return Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(dataAttribute, 0x10, 0x14), true);
         } else {
-            return Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true);
+            return Math.min(
+                    Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x30, 0x38), true),
+                    Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(dataAttribute, 0x38, 0x46), true)
+            );
         }
     }
 
