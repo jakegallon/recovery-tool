@@ -53,7 +53,9 @@ public class LogPanel extends JPanel {
     private void updateTimestamp() {
         LocalDateTime now = LocalDateTime.now();
         Duration elapsed = Duration.between(timestampOrigin, now);
-        timestamp = "[" + elapsed.toMinutes() + "m " + elapsed.getSeconds() + "s] ";
+        long minutes = elapsed.toMinutes();
+        long seconds = elapsed.getSeconds() - (minutes * 60);
+        timestamp = "[" + minutes + "m " + seconds + "s] ";
     }
 
     //for handling rapid logging
