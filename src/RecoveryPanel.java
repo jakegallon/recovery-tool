@@ -58,7 +58,6 @@ public class RecoveryPanel extends StepPanel {
         Font textFont = new Font("Arial", Font.PLAIN, 14);
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel waitLabel = new JLabel("Step 5: Wait");
         waitLabel.setFont(headerFont);

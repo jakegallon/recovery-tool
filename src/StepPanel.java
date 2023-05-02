@@ -1,10 +1,11 @@
 import javax.swing.*;
-import javax.swing.border.LineBorder;
+import javax.swing.border.EmptyBorder;
 
 public abstract class StepPanel extends JPanel {
 
     public StepPanel() {
-        setBorder(new LineBorder(Frame.DARK_COLOR, 2));
+        EmptyBorder emptyBorder = new EmptyBorder(10, 10, 10, 10);
+        setBorder(emptyBorder);
     }
 
     public abstract void onNextStep();

@@ -60,6 +60,8 @@ public class Frame extends JFrame {
         BottomPanel bottomPanel = new BottomPanel();
         add(bottomPanel, BorderLayout.PAGE_END);
 
+        getRootPane().setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, DARK_COLOR));
+
         setVisible(true);
     }
 

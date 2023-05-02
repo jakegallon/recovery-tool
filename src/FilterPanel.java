@@ -82,9 +82,9 @@ public class FilterPanel extends StepPanel {
         JLabel filterLabel = new JLabel("Step 4: Filter");
         filterLabel.setFont(headerFont);
         add(filterLabel);
-        springLayout.putConstraint(SpringLayout.NORTH, filterLabel, 10, SpringLayout.NORTH, this);
-        springLayout.putConstraint(SpringLayout.WEST, filterLabel, 10, SpringLayout.WEST, this);
-        springLayout.putConstraint(SpringLayout.EAST, filterLabel, -10, SpringLayout.EAST, this);
+        springLayout.putConstraint(SpringLayout.NORTH, filterLabel, 0, SpringLayout.NORTH, this);
+        springLayout.putConstraint(SpringLayout.WEST, filterLabel, 0, SpringLayout.WEST, this);
+        springLayout.putConstraint(SpringLayout.EAST, filterLabel, 0, SpringLayout.EAST, this);
 
         JLabel waitText = new JLabel("<html>Below are all of the deleted files which the program found on your drive. By selecting them using the checkbox on the left, you can mark them for recovery. Click next to initiate recovery, or cancel if you do not wish to recover any files.</html>");
         waitText.setFont(textFont);
@@ -113,7 +113,7 @@ public class FilterPanel extends StepPanel {
 
         add(content);
         springLayout.putConstraint(SpringLayout.NORTH, content, 10, SpringLayout.SOUTH, waitText);
-        springLayout.putConstraint(SpringLayout.SOUTH, content, -10, SpringLayout.SOUTH, this);
+        springLayout.putConstraint(SpringLayout.SOUTH, content, 0, SpringLayout.SOUTH, this);
         springLayout.putConstraint(SpringLayout.WEST, content, 0, SpringLayout.WEST, filterLabel);
         springLayout.putConstraint(SpringLayout.EAST, content, 0, SpringLayout.EAST, filterLabel);
 

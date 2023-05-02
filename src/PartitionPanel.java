@@ -38,7 +38,6 @@ public class PartitionPanel extends StepPanel {
         Frame.updateTitle("");
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         Font headerFont = new Font("Arial", Font.BOLD, 17);
         Font textFont = new Font("Arial", Font.PLAIN, 14);
 

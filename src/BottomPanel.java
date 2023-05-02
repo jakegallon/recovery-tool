@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,7 +10,6 @@ public class BottomPanel extends JPanel {
     private final static JButton cancelButton = new JButton("Cancel");
 
     public BottomPanel() {
-        setBorder(new MatteBorder(0, 2, 2, 2, Frame.DARK_COLOR));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setPreferredSize(new Dimension(100, 40));
 

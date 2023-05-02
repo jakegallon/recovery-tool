@@ -20,7 +20,7 @@ public class ScanPanel extends StepPanel {
     private final Timer scanTimer;
     protected final ConcurrentLinkedQueue<GenericRecord> updateQueue = new ConcurrentLinkedQueue<>();
 
-    protected final ArrayList<GenericRecord> deletedRecords = new ArrayList<>();
+    protected final ConcurrentLinkedQueue<GenericRecord> deletedRecords = new ConcurrentLinkedQueue<>();
 
     protected boolean isLogging;
     protected final LogPanel scanLogPanel = new LogPanel();
@@ -62,7 +62,6 @@ public class ScanPanel extends StepPanel {
         isLogging = prefs.getBoolean("IS_LOGGING", false);
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        setBorder(new EmptyBorder(10, 10, 10, 10));
         Font headerFont = new Font("Arial", Font.BOLD, 17);
         Font textFont = new Font("Arial", Font.PLAIN, 14);
 
@@ -116,7 +115,7 @@ public class ScanPanel extends StepPanel {
 
     @Override
     public void onNextStep() {
-        FilterPanel filterPanel = new FilterPanel(deletedRecords);
+        FilterPanel filterPanel = new FilterPanel(new ArrayList<>(deletedRecords));
         Frame.setStepPanel(filterPanel);
 
         BottomPanel.setNextButtonEnabled(false);
