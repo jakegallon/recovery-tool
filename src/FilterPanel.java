@@ -3,6 +3,8 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -54,6 +56,7 @@ public class FilterPanel extends StepPanel {
     private RowFilter<Object, Object> queryFilter;
 
     private JTextField searchField;
+    private JButton selectAllButton;
     private JCheckBox hideEmptyFilesCheckbox;
     private JCheckBox hideTooBigFilesCheckbox;
     private JCheckBox hideEmptyExtensionsCheckbox;
@@ -207,6 +210,7 @@ public class FilterPanel extends StepPanel {
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.PAGE_AXIS));
 
         initializeSearchField();
+        initializeSelectAllButton();
         initializeHideEmptyExtensionsCheckbox();
         initializeHideTooBigFilesCheckbox();
         initializeHideEmptyFilesCheckbox();
@@ -217,7 +221,7 @@ public class FilterPanel extends StepPanel {
 
         JPanel filters = new JPanel(new GridLayout(3, 2));
         filters.add(hideEmptyExtensionsCheckbox);
-        filters.add(new JPanel());
+        filters.add(selectAllButton);
         filters.add(hideEmptyFilesCheckbox);
         filters.add(new JPanel());
         filters.add(hideTooBigFilesCheckbox);
@@ -302,5 +306,16 @@ public class FilterPanel extends StepPanel {
             filters.add(queryFilter);
         }
         doFilter();
+    }
+
+    private boolean isAllSelected = false;
+
+    private void initializeSelectAllButton() {
+        selectAllButton = new JButton("Select All");
+
+        selectAllButton.addActionListener(e -> {
+            isAllSelected = !isAllSelected;
+            recordTable.setAllRowsSelected(isAllSelected);
+        });
     }
 }

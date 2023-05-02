@@ -123,6 +123,25 @@ public class RecordTable extends JTable {
         });
     }
 
+    public void setAllRowsSelected(boolean isSelected) {
+        recordsToRecover.clear();
+
+        int column = getColumnModel().getColumnIndex(IS_SELECTED_COLUMN);
+        int rowCount = getRowCount();
+        for (int i = 0; i < rowCount; i++) {
+            int row = getRowSorter().convertRowIndexToModel(i);
+            setValueAt(isSelected, i, column);
+
+            GenericRecord thisRecord = (GenericRecord) tableModel.getValueAt(row, getColumnModel().getColumnIndex(MFT_RECORD_COLUMN));
+            if(isSelected) {
+                if(!recordsToRecover.contains(thisRecord))
+                    recordsToRecover.add(thisRecord);
+            }
+        }
+
+        onRecordsToRecoverUpdated();
+    }
+
     public void setRowFilter(RowFilter<DefaultTableModel, Object> rowFilter) {
         tableSorter.setRowFilter(rowFilter);
     }
