@@ -10,8 +10,7 @@ public class NTFSScanPanel extends ScanPanel {
         super();
         setReadRunnable(NTFSScanner);
 
-        NTFSInformation ntfsInformation = NTFSInformation.getInstance();
-        readProgressBar.setPercentageLabelPrefix("Scanning drive " + ntfsInformation.getRoot().toString().substring(4));
+        readProgressBar.setPercentageLabelPrefix("Scanning drive " + NTFSInformation.getRoot().toString().substring(4));
     }
 
     private final Runnable NTFSScanner = () -> {
@@ -27,7 +26,7 @@ public class NTFSScanPanel extends ScanPanel {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         int mftRecordLength = ntfsInformation.getMFTRecordLength();
 
-        RandomAccessFile diskAccess = new RandomAccessFile(ntfsInformation.getRoot(), "r");
+        RandomAccessFile diskAccess = new RandomAccessFile(NTFSInformation.getRoot(), "r");
         FileChannel diskChannel = diskAccess.getChannel();
 
         MFTRecord mft = new MFTRecord(readMFTRecord(diskChannel, ntfsInformation.getMFTByteLocation()));
@@ -37,6 +36,7 @@ public class NTFSScanPanel extends ScanPanel {
         }
 
         LinkedHashMap<Long, Long> dataRunOffsetClusters = mft.getDataRunOffsetClusters();
+        NTFSInformation.setMFTDataRuns(dataRunOffsetClusters);
 
         int totalFilesCounter = 0;
         for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {

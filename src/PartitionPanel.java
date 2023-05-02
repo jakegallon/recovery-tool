@@ -111,7 +111,7 @@ public class PartitionPanel extends StepPanel {
         settingsLabel.setAlignmentY(BOTTOM_ALIGNMENT);
         add(settingsLabel);
 
-        JCheckBox loggingCheckbox = new JCheckBox("Logging Enabled (This will decrease speed)");
+        JCheckBox loggingCheckbox = new JCheckBox("Logging Enabled (decreases scanning speed)");
         loggingCheckbox.setFont(textFont);
         loggingCheckbox.setAlignmentX(Component.LEFT_ALIGNMENT);
         loggingCheckbox.setAlignmentY(BOTTOM_ALIGNMENT);
@@ -121,6 +121,16 @@ public class PartitionPanel extends StepPanel {
         boolean isLogging = prefs.getBoolean("IS_LOGGING", false);
         loggingCheckbox.setSelected(isLogging);
         loggingCheckbox.addActionListener(e -> prefs.putBoolean("IS_LOGGING", loggingCheckbox.isSelected()));
+
+        JCheckBox maintainTreeCheckbox = new JCheckBox("Maintain file structure (NTFS only, decreases recovery speed)");
+        maintainTreeCheckbox.setFont(textFont);
+        maintainTreeCheckbox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        maintainTreeCheckbox.setAlignmentY(BOTTOM_ALIGNMENT);
+        add(maintainTreeCheckbox);
+
+        boolean isMaintainTree = prefs.getBoolean("IS_MAINTAIN_TREE", false);
+        maintainTreeCheckbox.setSelected(isMaintainTree);
+        maintainTreeCheckbox.addActionListener(e -> prefs.putBoolean("IS_MAINTAIN_TREE", maintainTreeCheckbox.isSelected()));
 
         for (int i = 0; i < getComponents().length; i++) {
             if(getComponents()[i] == selectDirectoryComponent)

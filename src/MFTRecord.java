@@ -1,3 +1,7 @@
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -176,8 +180,7 @@ public class MFTRecord extends GenericRecord {
     private void parseDataRuns() {
         dataRunOffsetClusters = new LinkedHashMap<>();
 
-        byte[] dataAttribute;
-        dataAttribute = getAttribute(Attribute.DATA);
+        byte[] dataAttribute = getAttribute(Attribute.DATA);
 
         int dataAttributeDataRunsOffset = dataAttribute[0x20];
         byte[] dataRunBytes = Arrays.copyOfRange(dataAttribute, dataAttributeDataRunsOffset, dataAttribute.length);
@@ -202,5 +205,76 @@ public class MFTRecord extends GenericRecord {
             dataRunOffsetClusters.put(startBytes, lengthClusters);
             dataRunOffset += startLength + lengthLength + 1;
         }
+    }
+
+    public String getPath() {
+        try {
+            MFTRecord parentRecord = getParentRecord();
+            if(parentRecord == null) return "";
+
+            LinkedList<MFTRecord> parents = new LinkedList<>();
+            parents.add(parentRecord);
+
+            while(parents.getLast().getParentRecord() != null) {
+                parents.add(parents.getLast().getParentRecord());
+            }
+
+            StringBuilder pathBuilder = new StringBuilder();
+            for (int i = parents.size() - 1; i >= 0; i--) {
+                MFTRecord parent = parents.get(i);
+                String fileName = parent.fileName;
+                if (fileName.charAt(0) == '$') {
+                    fileName = fileName.substring(1);
+                }
+                pathBuilder.append(fileName);
+                pathBuilder.append("/");
+            }
+            return pathBuilder.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private MFTRecord parentRecord;
+
+    private MFTRecord getParentRecord() throws IOException {
+        if(parentRecord != null) return parentRecord;
+
+        byte[] nameAttribute = getAttribute(Attribute.FILE_NAME);
+        long parentRecordNumber = Utility.byteArrayToUnsignedLong(Arrays.copyOfRange(nameAttribute, 0x18, 0x1E), true);
+        if(parentRecordNumber == 5) return null;
+
+        NTFSInformation ntfsInformation = NTFSInformation.getInstance();
+        int recordsPerCluster = ntfsInformation.getBytesPerCluster() / ntfsInformation.getMFTRecordLength();
+        int recordOffset = 0;
+        for(Map.Entry<Long, Long> dataRun : NTFSInformation.getMFTDataRuns().entrySet()) {
+            long recordsInDataRun = dataRun.getValue() * recordsPerCluster;
+
+            if(recordsInDataRun + recordOffset < parentRecordNumber) {
+                recordOffset += recordsInDataRun;
+            } else {
+                long localRecordNumber = parentRecordNumber - recordOffset;
+                parentRecord = new MFTRecord(readMFTRecord(dataRun.getKey() + (localRecordNumber * ntfsInformation.getMFTRecordLength())));
+                return parentRecord;
+            }
+        }
+        return null;
+    }
+
+    private byte[] readMFTRecord(long offset) throws IOException {
+        RandomAccessFile diskAccess = new RandomAccessFile(NTFSInformation.getRoot(), "r");
+        FileChannel diskChannel = diskAccess.getChannel();
+        NTFSInformation ntfsInformation = NTFSInformation.getInstance();
+        byte[] mftRecord = new byte[ntfsInformation.getMFTRecordLength()];
+        ByteBuffer buffer = ByteBuffer.wrap(mftRecord);
+
+        diskChannel.position(offset);
+        diskChannel.read(buffer);
+
+        if(!Arrays.equals(Arrays.copyOf(mftRecord, 4), new byte[]{0x46, 0x49, 0x4C, 0x45})) {
+            return null;
+        }
+        diskAccess.close();
+        return mftRecord;
     }
 }

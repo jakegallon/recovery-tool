@@ -1,3 +1,5 @@
+import java.util.LinkedHashMap;
+
 public class NTFSInformation extends DriveInformation {
     private static NTFSInformation instance = null;
 
@@ -38,5 +40,15 @@ public class NTFSInformation extends DriveInformation {
         bootSector = readBootSector(getRoot());
         bytesPerSector = ((bootSector[0x0C] & 0xff) << 8) | (bootSector[0x0B] & 0xff);
         sectorsPerCluster = bootSector[0x0D];
+    }
+
+    private static LinkedHashMap<Long, Long> MFTDataRuns;
+
+    public static LinkedHashMap<Long, Long> getMFTDataRuns() {
+        return MFTDataRuns;
+    }
+
+    public static void setMFTDataRuns(LinkedHashMap<Long, Long> dataRuns) {
+        MFTDataRuns = dataRuns;
     }
 }

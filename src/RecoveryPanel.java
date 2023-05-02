@@ -20,6 +20,7 @@ public class RecoveryPanel extends StepPanel {
     private int filesProcessed = 0;
 
     protected boolean isLogging;
+    protected boolean isMaintainTree;
     protected final LogPanel recoveryLogPanel = new LogPanel(Integer.MAX_VALUE);
 
     @Override
@@ -39,6 +40,7 @@ public class RecoveryPanel extends StepPanel {
         Preferences preferences = Preferences.userNodeForPackage(PartitionPanel.class);
         String selectedFilePath = preferences.get("LAST_DIRECTORY", null);
         outputDirectory = new File(selectedFilePath);
+        isMaintainTree = preferences.getBoolean("IS_MAINTAIN_TREE", false);
 
         Preferences prefs = Preferences.userNodeForPackage(PartitionPanel.class);
         isLogging = prefs.getBoolean("IS_LOGGING", false);
@@ -139,17 +141,46 @@ public class RecoveryPanel extends StepPanel {
         byte[] fullBytes = mftRecord.getAttribute(Attribute.DATA);
         byte[] dataBytes = Arrays.copyOfRange(fullBytes, 0x18, 0x18 + (int) mftRecord.getFileSizeBytes());
         String fileName = mftRecord.getFileName();
+        if (fileName.charAt(0) == '$') {
+            fileName = fileName.substring(1);
+        }
 
-        File newFile = new File(outputDirectory, fileName);
+        String outputExtension = "";
+        if(isMaintainTree) {
+            outputExtension = "/" + mftRecord.getPath();
+            outputExtension = sanitizePath(outputExtension);
+        }
+        File outputDir = new File(outputDirectory + outputExtension);
+        if (!outputDir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            outputDir.mkdirs();
+        }
+
+        File newFile = new File(outputDir, fileName);
         FileOutputStream fos = new FileOutputStream(newFile);
         fos.write(dataBytes);
         fos.close();
     }
 
+    private String sanitizePath(String path) {
+        String invalidCharacters = "<>:\"\\|?*";
+
+        StringBuilder sanitizedPath = new StringBuilder();
+        for (int i = 0; i < path.length(); i++) {
+            char c = path.charAt(i);
+            boolean isInvalid = invalidCharacters.indexOf(c) != -1;
+            boolean isNonPrintable = c < 32 || c > 126;
+            if(!(isInvalid || isNonPrintable)){
+                sanitizedPath.append(c);
+            }
+        }
+        return sanitizedPath.toString();
+    }
+
     private void recoverNonResidentFile(MFTRecord mftRecord) throws IOException {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         final int bytesPerCluster = ntfsInformation.getBytesPerCluster();
-        File root = ntfsInformation.getRoot();
+        File root = NTFSInformation.getRoot();
 
         LinkedHashMap<Long, Long> dataRunOffsetClusters = mftRecord.getDataRunOffsetClusters();
 
@@ -160,7 +191,21 @@ public class RecoveryPanel extends StepPanel {
         }
 
         String fileName = mftRecord.getFileName();
-        File newFile = new File(outputDirectory, fileName);
+
+
+        String outputExtension = "";
+        if(isMaintainTree) {
+            outputExtension = "/" + mftRecord.getPath();
+            outputExtension = sanitizePath(outputExtension);
+        }
+
+        File outputDir = new File(outputDirectory + outputExtension);
+        if (!outputDir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            outputDir.mkdirs();
+        }
+
+        File newFile = new File(outputDir, fileName);
         FileOutputStream fos = new FileOutputStream(newFile);
 
         for(Map.Entry<Long, Long> dataRun : dataRunOffsetClusters.entrySet()) {
@@ -237,7 +282,7 @@ public class RecoveryPanel extends StepPanel {
 
             ArrayList<Integer> thisDirectoriesStartClusters = new ArrayList<>();
 
-            RandomAccessFile diskAccess = new RandomAccessFile(fat32Information.getRoot(), "r");
+            RandomAccessFile diskAccess = new RandomAccessFile(FAT32Information.getRoot(), "r");
             FileChannel diskChannel = diskAccess.getChannel();
             int nextCluster = fat32Record.startCluster;
 
