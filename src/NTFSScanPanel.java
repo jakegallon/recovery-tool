@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.util.*;
@@ -29,7 +30,7 @@ public class NTFSScanPanel extends ScanPanel {
         RandomAccessFile diskAccess = new RandomAccessFile(ntfsInformation.getRoot(), "r");
         FileChannel diskChannel = diskAccess.getChannel();
 
-        MFTRecord mft = new MFTRecord(Utility.readMFTRecord(diskChannel, ntfsInformation.getMFTByteLocation()));
+        MFTRecord mft = new MFTRecord(readMFTRecord(diskChannel, ntfsInformation.getMFTByteLocation()));
         mft.parseDataAttribute();
         if(mft.isDataResident()) {
             throw new RuntimeException("$MFT has resident data attribute");
@@ -53,7 +54,7 @@ public class NTFSScanPanel extends ScanPanel {
                 try {
                     readProgressBar.setValue(currentFileOffset + i);
 
-                    byte[] mftRecordBytes = Utility.readMFTRecord(diskChannel, offsetBytes);
+                    byte[] mftRecordBytes = readMFTRecord(diskChannel, offsetBytes);
                     if (mftRecordBytes != null) {
                         MFTRecord mftRecord = new MFTRecord(mftRecordBytes);
                         if(mftRecord.isDeleted()){
@@ -82,5 +83,19 @@ public class NTFSScanPanel extends ScanPanel {
         }
         diskAccess.close();
         isReading = false;
+    }
+
+    private byte[] readMFTRecord(FileChannel diskChannel, long offset) throws IOException {
+        NTFSInformation ntfsInformation = NTFSInformation.getInstance();
+        byte[] mftRecord = new byte[ntfsInformation.getMFTRecordLength()];
+        ByteBuffer buffer = ByteBuffer.wrap(mftRecord);
+
+        diskChannel.position(offset);
+        diskChannel.read(buffer);
+
+        if(!Arrays.equals(Arrays.copyOf(mftRecord, 4), new byte[]{0x46, 0x49, 0x4C, 0x45})) {
+            return null;
+        }
+        return mftRecord;
     }
 }
