@@ -41,19 +41,6 @@ public class Utility {
         return new BigInteger(1, bytes).longValue();
     }
 
-    public static byte[] readBootSector(File root) {
-        RandomAccessFile diskAccess;
-        try {
-            diskAccess = new RandomAccessFile(root, "r");
-            byte[] content = new byte[512]; //todo check for case where the sector size is not 512.
-            diskAccess.readFully(content);
-            diskAccess.close();
-            return content;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static byte[] readMFTRecord(FileChannel diskChannel, long offset) throws IOException {
         NTFSInformation ntfsInformation = NTFSInformation.getInstance();
         byte[] mftRecord = new byte[ntfsInformation.getMFTRecordLength()];
@@ -70,7 +57,7 @@ public class Utility {
 
     public static byte[] readCluster(FileChannel diskChannel, long clusterOffsetBytes) throws IOException {
         FAT32Information fat32Information = FAT32Information.getInstance();
-        byte[] fat32Record = new byte[fat32Information.sectorsPerCluster * fat32Information.bytesPerSector];
+        byte[] fat32Record = new byte[fat32Information.getSectorsPerCluster() * fat32Information.getBytesPerSector()];
         ByteBuffer buffer = ByteBuffer.wrap(fat32Record);
 
         diskChannel.position(clusterOffsetBytes);

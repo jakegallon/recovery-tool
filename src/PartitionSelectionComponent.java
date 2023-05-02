@@ -191,22 +191,22 @@ public class PartitionSelectionComponent extends JPanel {
         JPanel fat32Separator = createNamedSeparator("FAT32 Information");
         informationPanel.add(fat32Separator);
 
-        JLabel bytesPerSectorLabel = new JLabel("Bytes per Sector: " + fat32Information.bytesPerSector);
+        JLabel bytesPerSectorLabel = new JLabel("Bytes per Sector: " + fat32Information.getBytesPerSector());
         informationPanel.add(bytesPerSectorLabel);
 
-        JLabel sectorsPerClusterLabel = new JLabel("Sectors per Cluster: " + fat32Information.sectorsPerCluster);
+        JLabel sectorsPerClusterLabel = new JLabel("Sectors per Cluster: " + fat32Information.getSectorsPerCluster());
         informationPanel.add(sectorsPerClusterLabel);
 
-        JLabel sectorsPerFatLabel = new JLabel("Sectors per FAT: " + fat32Information.sectorsPerFat);
+        JLabel sectorsPerFatLabel = new JLabel("Sectors per FAT: " + fat32Information.getSectorsPerFat());
         informationPanel.add(sectorsPerFatLabel);
 
-        JLabel fatCountLabel = new JLabel("FAT count: " + fat32Information.fatCount);
+        JLabel fatCountLabel = new JLabel("FAT count: " + fat32Information.getFatCount());
         informationPanel.add(fatCountLabel);
 
-        JLabel reservedSectorsLabel = new JLabel("Reserved Sectors: " + fat32Information.reservedSectors);
+        JLabel reservedSectorsLabel = new JLabel("Reserved Sectors: " + fat32Information.getReservedSectors());
         informationPanel.add(reservedSectorsLabel);
 
-        JLabel dataStartSectorLabel = new JLabel("Data Start Sector: " + fat32Information.dataStartSector);
+        JLabel dataStartSectorLabel = new JLabel("Data Start Sector: " + fat32Information.getDataStartSector());
         informationPanel.add(dataStartSectorLabel);
     }
 

@@ -231,9 +231,9 @@ public class RecoveryPanel extends StepPanel {
             }
 
             FAT32Information fat32Information = FAT32Information.getInstance();
-            int bytesPerCluster = fat32Information.bytesPerSector * fat32Information.sectorsPerCluster;
-            int fatByteOffset = fat32Information.reservedSectors * fat32Information.bytesPerSector;
-            int dataOffsetBytes = fat32Information.bytesPerSector * fat32Information.dataStartSector;
+            int bytesPerCluster = fat32Information.getBytesPerSector() * fat32Information.getSectorsPerCluster();
+            int fatByteOffset = fat32Information.getReservedSectors() * fat32Information.getBytesPerSector();
+            int dataOffsetBytes = fat32Information.getBytesPerSector() * fat32Information.getDataStartSector();
 
             ArrayList<Integer> thisDirectoriesStartClusters = new ArrayList<>();
 

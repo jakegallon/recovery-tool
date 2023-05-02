@@ -43,13 +43,13 @@ public class FAT32ScanPanel extends ScanPanel{
     private void scanRootForDeletedFiles() throws IOException {
         FAT32Information fat32Information = FAT32Information.getInstance();
 
-        fatByteOffset = fat32Information.reservedSectors * fat32Information.bytesPerSector;
-        bytesPerCluster = fat32Information.bytesPerSector * fat32Information.sectorsPerCluster;
-        dataOffsetBytes = fat32Information.bytesPerSector * fat32Information.dataStartSector;
+        fatByteOffset = fat32Information.getReservedSectors() * fat32Information.getBytesPerSector();
+        bytesPerCluster = fat32Information.getBytesPerSector() * fat32Information.getSectorsPerCluster();
+        dataOffsetBytes = fat32Information.getBytesPerSector() * fat32Information.getDataStartSector();
 
         Arrays.fill(EMPTY_RECORD, (byte)0);
 
-        int rootDirectoryStartCluster = fat32Information.rootDirectoryStartCluster;
+        int rootDirectoryStartCluster = fat32Information.getRootDirectoryStartCluster();
         directoryStartClusters.add(rootDirectoryStartCluster);
 
         while(!directoryStartClusters.isEmpty()) {

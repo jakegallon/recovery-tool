@@ -1,11 +1,11 @@
 import java.io.File;
 import java.util.Arrays;
 
-public class FAT32Information {
+public class FAT32Information extends DriveInformation {
     private static FAT32Information instance = null;
 
     public static FAT32Information createInstance(File root) {
-        instance = new FAT32Information(root);
+        if(instance == null) instance = new FAT32Information(root);
         return instance;
     }
 
@@ -13,38 +13,35 @@ public class FAT32Information {
         return instance;
     }
 
-    private final File root;
-
     private FAT32Information(File root) {
         this.root = root;
-        readBootSector();
+        parseBootSector();
     }
 
-    int bytesPerSector;
-    int sectorsPerCluster;
-    int reservedSectors;
-    int fatCount;
-    int sectorsPerFat;
-    int dataStartSector;
+    public int getSectorsPerFat() {
+        return Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x24, 0x28), true);
+    }
 
-    int rootDirectoryStartCluster;
+    public int getFatCount() {
+        return bootSector[0x10];
+    }
 
-    private void readBootSector(){
-        byte[] bootSector = Utility.readBootSector(root);
+    public int getReservedSectors() {
+        return Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x0E, 0x10), true);
+    }
 
+    public int getDataStartSector() {
+        return getReservedSectors() + (getFatCount() * getSectorsPerFat());
+    }
+
+    public int getRootDirectoryStartCluster() {
+        return Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x2C, 0x30), true);
+    }
+
+    @Override
+    protected void parseBootSector() {
+        bootSector = readBootSector(root);
         bytesPerSector = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x0B, 0x0D), true);
         sectorsPerCluster = bootSector[0x0D];
-
-        reservedSectors = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x0E, 0x10), true);
-        fatCount = bootSector[0x10];
-        sectorsPerFat = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x24, 0x28), true);
-
-        dataStartSector = (reservedSectors+(fatCount * sectorsPerFat));
-
-        rootDirectoryStartCluster = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x2C, 0x30), true);
-    }
-
-    public File getRoot() {
-        return root;
     }
 }
