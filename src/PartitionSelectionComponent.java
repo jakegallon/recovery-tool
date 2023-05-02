@@ -79,6 +79,8 @@ public class PartitionSelectionComponent extends JPanel {
         selectedPartitionWidget = partitionWidget;
         selectedPartitionWidget.setBackground(Frame.SELECT_COLOR);
 
+        DriveInformation.setRoot(partitionWidget.getRoot());
+
         onNewSelectedPartition();
     }
 
@@ -170,7 +172,7 @@ public class PartitionSelectionComponent extends JPanel {
     }
 
     private void displayNtfsInformation() {
-        NTFSInformation ntfsInformation = NTFSInformation.createInstance(selectedPartitionWidget.getRoot());
+        NTFSInformation ntfsInformation = NTFSInformation.getInstance();
 
         JPanel ntfsSeparator = createNamedSeparator("NTFS Information");
         informationPanel.add(ntfsSeparator);
@@ -186,7 +188,7 @@ public class PartitionSelectionComponent extends JPanel {
     }
 
     private void displayFat32Information() {
-        FAT32Information fat32Information = FAT32Information.createInstance(selectedPartitionWidget.getRoot());
+        FAT32Information fat32Information = FAT32Information.getInstance();
 
         JPanel fat32Separator = createNamedSeparator("FAT32 Information");
         informationPanel.add(fat32Separator);

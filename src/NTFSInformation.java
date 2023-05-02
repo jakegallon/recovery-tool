@@ -1,14 +1,8 @@
-import java.io.File;
-
 public class NTFSInformation extends DriveInformation {
     private static NTFSInformation instance = null;
 
-    public static NTFSInformation createInstance(File root) {
-        if(instance == null) instance = new NTFSInformation(root);
-        return instance;
-    }
-
     public static NTFSInformation getInstance() {
+        if(instance == null) instance = new NTFSInformation();
         return instance;
     }
 
@@ -35,14 +29,13 @@ public class NTFSInformation extends DriveInformation {
         return getMFTClusterLocation() * getBytesPerCluster();
     }
 
-    private NTFSInformation(File root) {
-        this.root = root;
+    private NTFSInformation() {
         parseBootSector();
     }
 
     @Override
     protected void parseBootSector(){
-        bootSector = readBootSector(root);
+        bootSector = readBootSector(getRoot());
         bytesPerSector = ((bootSector[0x0C] & 0xff) << 8) | (bootSector[0x0B] & 0xff);
         sectorsPerCluster = bootSector[0x0D];
     }

@@ -1,20 +1,14 @@
-import java.io.File;
 import java.util.Arrays;
 
 public class FAT32Information extends DriveInformation {
     private static FAT32Information instance = null;
 
-    public static FAT32Information createInstance(File root) {
-        if(instance == null) instance = new FAT32Information(root);
-        return instance;
-    }
-
     public static FAT32Information getInstance() {
+        if(instance == null) instance = new FAT32Information();
         return instance;
     }
 
-    private FAT32Information(File root) {
-        this.root = root;
+    private FAT32Information() {
         parseBootSector();
     }
 
@@ -40,7 +34,7 @@ public class FAT32Information extends DriveInformation {
 
     @Override
     protected void parseBootSector() {
-        bootSector = readBootSector(root);
+        bootSector = readBootSector(getRoot());
         bytesPerSector = Utility.byteArrayToUnsignedInt(Arrays.copyOfRange(bootSector, 0x0B, 0x0D), true);
         sectorsPerCluster = bootSector[0x0D];
     }

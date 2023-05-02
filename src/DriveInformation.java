@@ -3,13 +3,17 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public abstract class DriveInformation {
-    protected byte[] bootSector;
-    protected File root;
+    private static File root;
 
-    public File getRoot() {
+    public static void setRoot(File r) {
+        root = r;
+    }
+
+    public static File getRoot() {
         return root;
     }
 
+    protected byte[] bootSector;
     protected int bytesPerSector;
     protected int sectorsPerCluster;
 
