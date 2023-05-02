@@ -73,8 +73,10 @@ public class SelectDirectoryComponent extends JPanel {
         String selectedFilePath = preferences.get("LAST_DIRECTORY", null);
         if (selectedFilePath != null) {
             File selectedFile = new File(selectedFilePath);
-            fileLabel.setText(selectedFilePath);
-            parent.notifyOutputLocationSelected(selectedFile);
+            if(selectedFile.exists()) {
+                fileLabel.setText(selectedFilePath);
+                parent.notifyOutputLocationSelected(selectedFile);
+            }
         }
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 27));
