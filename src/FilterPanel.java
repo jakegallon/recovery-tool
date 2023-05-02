@@ -35,6 +35,14 @@ public class FilterPanel extends StepPanel {
             return fileSizeValue != null && !"0".equals(fileSizeValue.toString());
         }
     };
+    private final RowFilter<Object, Object> fileTooBigFilter = new RowFilter<Object, Object>() {
+        @Override
+        public boolean include(RowFilter.Entry<?, ?> entry) {
+            int sizeColumnIndex = recordTable.getColumnModel().getColumnIndex("File Size");
+            Object fileSizeValue = entry.getValue(sizeColumnIndex);
+            return fileSizeValue != null && (long) fileSizeValue <= usedSpace;
+        }
+    };
     private final RowFilter<Object, Object> emptyExtensionFilter = new RowFilter<Object, Object>() {
         @Override
         public boolean include(RowFilter.Entry<?, ?> entry) {
@@ -47,6 +55,7 @@ public class FilterPanel extends StepPanel {
 
     private JTextField searchField;
     private JCheckBox hideEmptyFilesCheckbox;
+    private JCheckBox hideTooBigFilesCheckbox;
     private JCheckBox hideEmptyExtensionsCheckbox;
 
     private final RecordTable recordTable;
@@ -199,16 +208,19 @@ public class FilterPanel extends StepPanel {
 
         initializeSearchField();
         initializeHideEmptyExtensionsCheckbox();
+        initializeHideTooBigFilesCheckbox();
         initializeHideEmptyFilesCheckbox();
 
         JPanel queryPanel = new JPanel(new BorderLayout());
         queryPanel.add(new JLabel("Search: "), BorderLayout.LINE_START);
         queryPanel.add(searchField, BorderLayout.CENTER);
 
-        JPanel filters = new JPanel(new GridLayout(2, 2));
+        JPanel filters = new JPanel(new GridLayout(3, 2));
         filters.add(hideEmptyExtensionsCheckbox);
         filters.add(new JPanel());
         filters.add(hideEmptyFilesCheckbox);
+        filters.add(new JPanel());
+        filters.add(hideTooBigFilesCheckbox);
         filters.add(queryPanel);
 
         filterPanel.add(filters);
@@ -244,6 +256,21 @@ public class FilterPanel extends StepPanel {
                 filters.add(emptyFileFilter);
             } else {
                 filters.remove(emptyFileFilter);
+            }
+            doFilter();
+        });
+    }
+
+    private void initializeHideTooBigFilesCheckbox() {
+        hideTooBigFilesCheckbox = new JCheckBox("Hide files too large to recover");
+        hideTooBigFilesCheckbox.setSelected(true);
+        filters.add(fileTooBigFilter);
+
+        hideTooBigFilesCheckbox.addActionListener(e -> {
+            if(hideTooBigFilesCheckbox.isSelected()) {
+                filters.add(fileTooBigFilter);
+            } else {
+                filters.remove(fileTooBigFilter);
             }
             doFilter();
         });
